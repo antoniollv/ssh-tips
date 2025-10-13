@@ -267,6 +267,8 @@ SSH sigue evolucionando con los requisitos modernos de seguridad:
 - [Documentación oficial de OpenSSH](https://www.openssh.com/)
 - [RFCs del protocolo SSH](https://www.ietf.org/rfc/rfc4251.txt)
 - [SSH Academy](https://www.ssh.com/academy/ssh)
+- [OpenBSD OpenSSH FAQ](https://www.openbsd.org/faq/faq10.html)
+- [ArchWiki: SSH](https://wiki.archlinux.org/title/SSH)
 
 ## Contribuir
 
