@@ -1,4 +1,3 @@
-```markdown name=README_es.md
 # ssh-tips
 Consejos y trucos de SSH
 
@@ -273,6 +272,3 @@ SSH sigue evolucionando con los requisitos modernos de seguridad:
 ## Licencia
 
 Este proyecto está licenciado bajo CC0 1.0 Universal - consulta el archivo LICENSE para más detalles.
-
-```
-```
