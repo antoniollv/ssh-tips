@@ -26,8 +26,11 @@ sudo apt update
 sudo apt install openssh-server
 ```
 
-**Instalación (RedHat/CentOS):**
+**Instalación (RedHat/CentOS/Fedora):**
 ```bash
+# Para RHEL/CentOS 8+ y Fedora:
+sudo dnf install openssh-server
+# Para RHEL/CentOS 7 y anteriores:
 sudo yum install openssh-server
 sudo systemctl enable sshd
 sudo systemctl start sshd
