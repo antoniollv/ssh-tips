@@ -1,6 +1,47 @@
 # Introduction - SSH Tips & Tricks
 
-## What is SSH Beyond Remote Access?
+## Prerequisites: AWS Configuration for GitHub Actions
+
+Before starting, you need to configure the base AWS infrastructure.
+
+### Option 1: Using GitHub Actions (Recommended)
+
+1. Configure the `poc` environment in your GitHub repository
+2. Add these secrets to the `poc` environment:
+   - `AWS_ACCESS_KEY_ID`: Temporary AWS credentials for initial setup
+   - `AWS_SECRET_ACCESS_KEY`: Temporary AWS credentials for initial setup
+3. Run the **Setup AWS Requirements** workflow from GitHub Actions
+4. The workflow will automatically create:
+   - S3 bucket for Terraform state
+   - IAM role with OIDC for GitHub Actions
+5. Add the generated secrets (`AWS_ROLE_ARN`, `TF_STATE_BUCKET`) to the `poc` environment
+6. Remove temporary credentials (workflows will use OIDC)
+
+### Option 2: Local setup with scripts
+
+**Requirements:** AWS CLI configured with admin credentials
+
+```bash
+cd 01-introduction
+cp env.local.template env.local
+# Edit env.local with your values:
+# - AWS_REGION=eu-west-1, TF_STATE_BUCKET
+# - GITHUB_ORG, GITHUB_REPO
+
+# Create S3 bucket
+chmod +x create-s3-backend.sh
+./create-s3-backend.sh
+
+# Create IAM role for GitHub Actions
+chmod +x create-github-iam-role.sh
+./create-github-iam-role.sh
+```
+
+Add the secrets shown in the script output to your GitHub repository.
+
+---
+
+## What is SSH beyond remote access?
 
 SSH (Secure Shell) is a cryptographic network protocol developed in 1995 by Tatu Ylönen. Most of us know it as the tool to connect to remote servers:
 

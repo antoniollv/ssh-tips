@@ -1,0 +1,144 @@
+name: Deploy Case 1 - Reverse SSH Tunnel Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
+      ssh_public_key:
+        description: 'SSH public key for EC2 access (optional, uses default if empty)'
+        required: false
+        type: string
+
+env:
+  AWS_REGION: eu-west-1
+  TF_VERSION: 1.6.0
+  WORKING_DIR: 02-reverse-tunnel/terraform
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.action }}
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Get configuration from AWS Secrets Manager
+        id: get-config
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id ssh-tips/github-actions-config \
+            --region ${{ env.AWS_REGION }} \
+            --query SecretString \
+            --output text)
+          
+          TF_BUCKET=$(echo $SECRET | jq -r '.TF_STATE_BUCKET')
+          ROLE_ARN=$(echo $SECRET | jq -r '.AWS_ROLE_ARN')
+          
+          echo "TF_STATE_BUCKET=$TF_BUCKET" >> $GITHUB_ENV
+          echo "AWS_ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+          
+          # Mask sensitive values
+          echo "::add-mask::$ROLE_ARN"
+          echo "✅ Configuration loaded from Secrets Manager"
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+      
+      - name: Terraform Init
+        id: init
+        run: |
+          terraform init \
+            -backend-config="bucket=$TF_STATE_BUCKET" \
+            -backend-config="key=ssh-tips/02-reverse-tunnel/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+      
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        id: plan
+        if: inputs.action == 'apply'
+        run: |
+          terraform plan -no-color -input=false \
+            -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}" \
+            -out=tfplan
+        continue-on-error: true
+      
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+      
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve -input=false tfplan
+      
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        run: |
+          terraform destroy -auto-approve -input=false \
+            -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}"
+      
+      - name: Get Outputs
+        if: inputs.action == 'apply'
+        id: outputs
+        run: |
+          echo "ec2_public_ip=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
+          echo "ec2_instance_id=$(terraform output -raw ec2_instance_id)" >> $GITHUB_OUTPUT
+          echo "demo_url=$(terraform output -raw demo_url)" >> $GITHUB_OUTPUT
+      
+      - name: Display Connection Info
+        if: inputs.action == 'apply'
+        run: |
+          echo "### 🚀 Infrastructure Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**EC2 Public IP:** ${{ steps.outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Instance ID:** ${{ steps.outputs.outputs.ec2_instance_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Demo URL:** ${{ steps.outputs.outputs.demo_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### SSH Connection Command:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "ssh -i ~/.ssh/id_rsa ec2-user@${{ steps.outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Reverse Tunnel Command:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "ssh -N -R 8080:localhost:8080 ec2-user@${{ steps.outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload Terraform Plan
+        if: inputs.action == 'apply'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-reverse-tunnel
+          path: ${{ env.WORKING_DIR }}/tfplan
+          retention-days: 7

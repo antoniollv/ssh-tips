@@ -1,5 +1,46 @@
 # Introducción - SSH Tips & Tricks
 
+## Prerequisitos: Configuración AWS para GitHub Actions
+
+Antes de comenzar, necesitas configurar la infraestructura AWS base.
+
+### Opción 1: Usando GitHub Actions (Recomendado)
+
+1. Configura el entorno `poc` en tu repositorio GitHub
+2. Añade estos secrets al entorno `poc`:
+   - `AWS_ACCESS_KEY_ID`: Credenciales AWS temporales para setup inicial
+   - `AWS_SECRET_ACCESS_KEY`: Credenciales AWS temporales para setup inicial
+3. Ejecuta el workflow **Setup AWS Requirements** desde GitHub Actions
+4. El workflow creará automáticamente:
+   - Bucket S3 para Terraform state
+   - Rol IAM con OIDC para GitHub Actions
+5. Añade los secrets generados (`AWS_ROLE_ARN`, `TF_STATE_BUCKET`) al entorno `poc`
+6. Elimina las credenciales temporales (los workflows usarán OIDC)
+
+### Opción 2: Configuración local con scripts
+
+**Requisitos:** AWS CLI configurada con credenciales de administrador
+
+```bash
+cd 01-introduction
+cp env.local.template env.local
+# Editar env.local con tus valores:
+# - AWS_REGION=eu-west-1, TF_STATE_BUCKET
+# - GITHUB_ORG, GITHUB_REPO
+
+# Crear bucket S3
+chmod +x create-s3-backend.sh
+./create-s3-backend.sh
+
+# Crear rol IAM para GitHub Actions
+chmod +x create-github-iam-role.sh
+./create-github-iam-role.sh
+```
+
+Añade los secrets mostrados en la salida del script a tu repositorio GitHub.
+
+---
+
 ## ¿Qué es SSH más allá del acceso remoto?
 
 SSH (Secure Shell) es un protocolo de red criptográfico desarrollado en 1995 por Tatu Ylönen. La mayoría lo conocemos como la herramienta para conectarnos a servidores remotos:
