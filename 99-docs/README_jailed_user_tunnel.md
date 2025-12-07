@@ -1,6 +1,8 @@
-# Usuario Enjaulado con SSH y Túnel
+# Jailed User with SSH and Tunnel
 
-## Crear estructura de directorios y dispositivos
+This document describes how to create a jailed SSH user (chroot) with limited capabilities and configure persistent SSH tunnels.
+
+## Create Directory Structure and Devices
 
 ```bash
 mkdir -p /home/JailUsers/dev
@@ -8,14 +10,14 @@ mkdir -p /home/JailUsers/bin
 mkdir -p /home/JailUsers/etc
 mkdir -p /home/JailUsers/lib64
 chmod 755 /home/JailUsers/
-  
+
 mknod -m 666 /home/JailUsers/dev/null c 1 3
 mknod -m 666 /home/JailUsers/dev/tty c 5 0
 mknod -m 666 /home/JailUsers/dev/zero c 1 5
 mknod -m 666 /home/JailUsers/dev/random c 1 8
 ```
 
-## Copiar Bash y librerías necesarias
+## Copy Bash and Required Libraries
 
 ```bash
 ldd /bin/bash
@@ -27,34 +29,34 @@ cp /lib64/libdl.so.2 /home/JailUsers/lib64
 cp /lib64/libc.so.6 /home/JailUsers/lib64
 ```
 
-## Crear grupo y usuario enjaulado
+## Create Jailed Group and User
 
 ```bash
 groupadd -g 1100 jailusers
 ```
 
-### Editar `/etc/ssh/sshd_config`
+### Edit `/etc/ssh/sshd_config`
 
-Agrega al final las siguientes líneas:
+Add the following lines at the end:
 
 ```config
 Match Group jailusers
 ChrootDirectory /home/JailUsers/
 ```
 
-Reinicia el servicio SSH:
+Restart the SSH service:
 
 ```bash
 systemctl restart sshd
 ```
 
-Crea el usuario enjaulado:
+Create the jailed user:
 
 ```bash
 useradd -d /home/JailUsers/home/demogexflow -m -g jailusers demogexflow
 ```
 
-## Preparar archivos y llaves
+## Prepare Files and Keys
 
 ```bash
 cp -vf /etc/{passwd,group} /home/JailUsers/etc/
@@ -65,7 +67,7 @@ chmod 700 /home/JailUsers/home/demogexflow/.ssh
 chmod 400 /home/JailUsers/home/demogexflow/.ssh/authorized_keys
 ```
 
-## Incluir comando `ls` (opcional)
+## Include `ls` Command (Optional)
 
 ```bash
 ldd /bin/ls
@@ -82,32 +84,32 @@ cp /lib64/libattr.so.1 /home/JailUsers/lib64/
 cp /lib64/libpthread.so.0 /home/JailUsers/lib64/
 ```
 
-## Configuración de SSH
+## SSH Configuration
 
-**Para permitir forward de puerto en todas las interfaces (no solo localhost)**
+### Allow Port Forwarding on All Interfaces
 
-Editar `/etc/ssh/sshd_config` y agregar:
+To allow port forwarding on all interfaces (not just localhost), edit `/etc/ssh/sshd_config` and add:
 
 ```config
 GatewayPorts yes
 ```
 
-**Para mantener las sesiones activas**
+### Keep Sessions Alive
 
 ```config
 ClientAliveInterval 60
 ClientAliveCountMax 3
 ```
 
-## Unidad systemd para túnel SSH
+## Systemd Unit for SSH Tunnel
 
-Crea un archivo de unidad en `/etc/systemd/system/autossh-tunnel.service`:
+Create a unit file at `/etc/systemd/system/autossh-tunnel.service`:
 
 ```ini
 [Unit]
 Description=Keeps a tunnel to 'ssh.teralco.com' open
 After=network.target ssh.service
-# En Ubuntu: After=network-online.target ssh.service
+# On Ubuntu: After=network-online.target ssh.service
 
 [Service]
 Environment="AUTOSSH_PORT=27701"
@@ -119,7 +121,7 @@ Environment="MIDDLEMAN_PUERTO_SSH=2222"
 User=teralco
 ExecStart=/usr/bin/autossh -N -R ${AUTOSSH_PORT}:${PORT_MIDDLEMAN_WILL_LISTEN_ON}:localhost:${PUERTO_SSH} -p ${MIDDLEMAN_PUERTO_SSH} ${MIDDLEMAN_SERVER_AND_USERNAME}
 
-# Reiniciar cada >2 segundos para evitar fallo de StartLimitInterval
+# Restart every >2 seconds to avoid StartLimitInterval failure
 #RestartSec=5
 #Restart=always
 
@@ -127,7 +129,7 @@ ExecStart=/usr/bin/autossh -N -R ${AUTOSSH_PORT}:${PORT_MIDDLEMAN_WILL_LISTEN_ON
 WantedBy=multi-user.target
 ```
 
-## Añadir clave SSH al archivo de hosts conocidos
+## Add SSH Key to Known Hosts File
 
 ```bash
 ssh-keyscan -t rsa <IP> >>$HOME/.ssh/known_hosts
