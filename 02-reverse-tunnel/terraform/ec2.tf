@@ -53,15 +53,6 @@ resource "aws_security_group" "bastion" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow HTTP on standard port 80 (in case demo_port is different)
-  ingress {
-    description = "HTTP standard port"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   # Outbound internet access
   egress {
     description = "Allow all outbound traffic"
