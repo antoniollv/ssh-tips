@@ -66,11 +66,15 @@ case $choice in
         echo -e "${BLUE}${BOLD}Recording Complete Demo (Automated)${NC}"
         echo ""
         echo "This will automatically:"
-        echo "  1. Setup crazy-bat container"
-        echo "  2. Launch SSH tunnel in background"
-        echo "  3. Test public URL (should work)"
-        echo "  4. Kill tunnel"
-        echo "  5. Test again (should fail)"
+        echo "  1. Test local/remote (both should fail)"
+        echo "  2. Start crazy-bat container"
+        echo "  3. Test local OK / remote KO"
+        echo "  4. Launch SSH tunnel"
+        echo "  5. Test local OK / remote OK"
+        echo "  6. Kill tunnel"
+        echo "  7. Test local OK / remote KO"
+        echo "  8. Stop container"
+        echo "  9. Test local KO / remote KO"
         echo ""
         read -p "Press Enter to start recording..."
         
@@ -90,33 +94,61 @@ echo "🎯 SSH Tips - Case 1: Reverse Tunnel Demonstration"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-echo "📦 Step 1: Setting up crazy-bat web server..."
+echo "📋 Initial state: Everything should fail"
+echo ""
+echo "Command: curl http://localhost:8085"
+curl -s http://localhost:8085 || echo "❌ Local KO (expected)"
+echo ""
+echo "Command: curl http://${EC2_IP}:8080"
+curl -s http://${EC2_IP}:8080 || echo "❌ Remote KO (expected)"
+echo ""
+sleep 2
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📦 Step 1: Starting crazy-bat web server..."
 echo ""
 ./setup-crazy-bat.sh
 echo ""
+sleep 2
 
-echo "🔗 Step 2: Establishing SSH reverse tunnel in background..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔍 Step 2: Testing after starting container"
+echo ""
+echo "Command: curl http://localhost:8085"
+curl -s http://localhost:8085 && echo "✅ Local OK"
+echo ""
+echo "Command: curl http://${EC2_IP}:8080"
+curl -s http://${EC2_IP}:8080 || echo "❌ Remote KO (expected - no tunnel yet)"
+echo ""
+sleep 2
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔗 Step 3: Establishing SSH reverse tunnel in background..."
 echo ""
 echo "Command: ssh -N -R 8080:localhost:8085 ec2-user@${EC2_IP}"
 ssh -N -R 8080:localhost:8085 \
     -o StrictHostKeyChecking=no \
     -o ServerAliveInterval=60 \
-    -i ~/.ssh/id_rsa.pub \
+    -i ~/.ssh/id_rsa \
     ec2-user@${EC2_IP} &
 TUNNEL_PID=$!
 echo "Tunnel PID: $TUNNEL_PID"
 echo ""
 sleep 3
 
-echo "✅ Step 3: Testing public URL (tunnel is active)..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ Step 4: Testing after tunnel is established"
+echo ""
+echo "Command: curl http://localhost:8085"
+curl -s http://localhost:8085 && echo "✅ Local OK"
 echo ""
 echo "Command: curl http://${EC2_IP}:8080"
-curl -s http://${EC2_IP}:8080 || true
-echo ""
+curl -s http://${EC2_IP}:8080 && echo "✅ Remote OK (tunnel working!)"
 echo ""
 sleep 2
 
-echo "🔪 Step 4: Killing the SSH tunnel..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔪 Step 5: Killing the SSH tunnel..."
 echo ""
 echo "Command: kill $TUNNEL_PID"
 kill $TUNNEL_PID 2>/dev/null || true
@@ -124,21 +156,41 @@ echo "Tunnel stopped."
 echo ""
 sleep 2
 
-echo "❌ Step 5: Testing public URL again (should fail now)..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔍 Step 6: Testing after tunnel is killed"
+echo ""
+echo "Command: curl http://localhost:8085"
+curl -s http://localhost:8085 && echo "✅ Local OK (container still running)"
 echo ""
 echo "Command: curl http://${EC2_IP}:8080"
-curl -s http://${EC2_IP}:8080 || echo "Connection failed (expected - tunnel is down)"
+curl -s http://${EC2_IP}:8080 || echo "❌ Remote KO (tunnel is down)"
 echo ""
+sleep 2
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🛑 Step 7: Stopping crazy-bat container..."
+echo ""
+echo "Command: docker stop crazy-bat && docker rm crazy-bat"
+docker stop crazy-bat 2>/dev/null || true
+docker rm crazy-bat 2>/dev/null || true
+echo "Container stopped."
+echo ""
+sleep 2
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📋 Final state: Everything should fail again"
+echo ""
+echo "Command: curl http://localhost:8085"
+curl -s http://localhost:8085 || echo "❌ Local KO (container stopped)"
+echo ""
+echo "Command: curl http://${EC2_IP}:8080"
+curl -s http://${EC2_IP}:8080 || echo "❌ Remote KO (no tunnel, no container)"
 echo ""
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✨ Demo complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-
-# Cleanup
-docker stop crazy-bat 2>/dev/null || true
-docker rm crazy-bat 2>/dev/null || true
 
 EOFSCRIPT
         chmod +x "$TEMP_SCRIPT"
@@ -203,7 +255,7 @@ echo ""
 ssh -N -R 8080:localhost:8085 \
     -o StrictHostKeyChecking=no \
     -o ServerAliveInterval=60 \
-    -i ~/.ssh/id_rsa.pub \
+    -i ~/.ssh/id_rsa \
     ec2-user@${EC2_IP} &
 TUNNEL_PID=$!
 echo "✓ Tunnel established (PID: $TUNNEL_PID)"
