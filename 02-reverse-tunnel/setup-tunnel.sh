@@ -59,15 +59,15 @@ fi
 
 # Configuration
 EC2_IP="${1:-}"
-DEMO_PORT="${2:-80}"
+DEMO_PORT="${2:-8080}"
 SSH_KEY="${3:-$HOME/.ssh/id_rsa}"
-LOCAL_SERVICE_PORT="${4:-8080}"
+LOCAL_SERVICE_PORT="${4:-8085}"
 
 if [ -z "$EC2_IP" ]; then
     error "Usage: $0 <EC2_PUBLIC_IP> [DEMO_PORT] [SSH_KEY] [LOCAL_SERVICE_PORT]"
     echo ""
     echo "Example:"
-    echo "  $0 54.123.45.67 80 ~/.ssh/ssh-tips-key.pem 8080"
+    echo "  $0 54.123.45.67 8080 ~/.ssh/ssh-tips-key.pem 8085"
     exit 1
 fi
 

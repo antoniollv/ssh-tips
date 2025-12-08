@@ -92,15 +92,12 @@ else
     info "No manual SSH tunnel processes found"
 fi
 
-section "3️⃣  Stop crazy-bat Docker Containers"
+section "3️⃣  Stop crazy-bat Docker Container"
 
-if [ -d "$CRAZY_BAT_DIR" ]; then
-    info "Stopping crazy-bat containers..."
-    run_cmd "cd $CRAZY_BAT_DIR && (docker compose down 2>/dev/null || docker-compose down 2>/dev/null || echo 'No containers to stop')"
-    success "crazy-bat stopped"
-else
-    info "crazy-bat directory not found at $CRAZY_BAT_DIR"
-fi
+info "Stopping crazy-bat container..."
+run_cmd "docker stop crazy-bat 2>/dev/null || echo 'No container running'"
+run_cmd "docker rm crazy-bat 2>/dev/null || echo 'No container to remove'"
+success "crazy-bat stopped"
 
 section "4️⃣  Check for Listening Ports"
 

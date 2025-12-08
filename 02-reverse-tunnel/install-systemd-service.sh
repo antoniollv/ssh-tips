@@ -63,15 +63,15 @@ ACTUAL_HOME=$(getent passwd "$ACTUAL_USER" | cut -d: -f6)
 
 # Configuration
 EC2_IP="${1:-}"
-DEMO_PORT="${2:-80}"
-LOCAL_PORT="${3:-8080}"
+DEMO_PORT="${2:-8080}"
+LOCAL_PORT="${3:-8085}"
 SSH_KEY="${4:-$ACTUAL_HOME/.ssh/id_rsa}"
 
 if [ -z "$EC2_IP" ]; then
     error "Usage: sudo $0 <EC2_PUBLIC_IP> [DEMO_PORT] [LOCAL_PORT] [SSH_KEY]"
     echo ""
     echo "Example:"
-    echo "  sudo $0 54.123.45.67 80 8080 /home/user/.ssh/ssh-tips-key.pem"
+    echo "  sudo $0 54.123.45.67 8080 8085 /home/user/.ssh/ssh-tips-key.pem"
     exit 1
 fi
 

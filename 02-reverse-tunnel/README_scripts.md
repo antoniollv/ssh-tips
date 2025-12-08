@@ -61,20 +61,21 @@ Prepares and starts the crazy-bat web server.
 **Parameters:**
 
 - `CRAZY_BAT_DIR`: Path to crazy-bat repository (default: `$HOME/DevOps/crazy-bat`)
-- `PORT`: Port to run the server on (default: `8080`)
+- `PORT`: Port to run the server on (default: `8085`)
 
 **What it does:**
 
 1. Clones crazy-bat if not present
 2. Checks Docker installation
-3. Stops any existing containers
-4. Builds and starts crazy-bat with Docker Compose
-5. Verifies the service is accessible on localhost
+3. Stops any existing container
+4. Builds the Docker image
+5. Starts crazy-bat container on specified port
+6. Verifies the service is accessible on localhost
 
 **Example:**
 
 ```bash
-./setup-crazy-bat.sh ~/projects/crazy-bat 8080
+./setup-crazy-bat.sh ~/projects/crazy-bat 8085
 ```
 
 ### `setup-tunnel.sh`
@@ -90,9 +91,9 @@ Establishes the reverse SSH tunnel manually (foreground process).
 **Parameters:**
 
 - `EC2_PUBLIC_IP`: Public IP of your EC2 instance (required)
-- `DEMO_PORT`: Port on EC2 to expose (default: `80`)
+- `DEMO_PORT`: Port on EC2 to expose (default: `8080`)
 - `SSH_KEY`: Path to SSH private key (default: `~/.ssh/id_rsa`)
-- `LOCAL_SERVICE_PORT`: Local port where crazy-bat runs (default: `8080`)
+- `LOCAL_SERVICE_PORT`: Local port where crazy-bat runs (default: `8085`)
 
 **What it does:**
 
@@ -105,7 +106,7 @@ Establishes the reverse SSH tunnel manually (foreground process).
 **Example:**
 
 ```bash
-./setup-tunnel.sh 54.123.45.67 80 ~/.ssh/ssh-tips-key.pem 8080
+./setup-tunnel.sh 54.123.45.67 8080 ~/.ssh/ssh-tips-key.pem 8085
 ```
 
 **Note:** This runs in the foreground. Press `Ctrl+C` to stop the tunnel.
@@ -123,8 +124,8 @@ sudo ./install-systemd-service.sh <EC2_PUBLIC_IP> [DEMO_PORT] [LOCAL_PORT] [SSH_
 **Parameters:**
 
 - `EC2_PUBLIC_IP`: Public IP of your EC2 instance (required)
-- `DEMO_PORT`: Port on EC2 to expose (default: `80`)
-- `LOCAL_PORT`: Local port where crazy-bat runs (default: `8080`)
+- `DEMO_PORT`: Port on EC2 to expose (default: `8080`)
+- `LOCAL_PORT`: Local port where crazy-bat runs (default: `8085`)
 - `SSH_KEY`: Path to SSH private key (default: `~/.ssh/id_rsa`)
 
 **What it does:**
@@ -137,7 +138,7 @@ sudo ./install-systemd-service.sh <EC2_PUBLIC_IP> [DEMO_PORT] [LOCAL_PORT] [SSH_
 **Example:**
 
 ```bash
-sudo ./install-systemd-service.sh 54.123.45.67 80 8080 ~/.ssh/ssh-tips-key.pem
+sudo ./install-systemd-service.sh 54.123.45.67 8080 8085 ~/.ssh/ssh-tips-key.pem
 ```
 
 **Systemd commands:**
@@ -171,7 +172,7 @@ Verifies all components of the demo are working correctly.
 **Parameters:**
 
 - `EC2_PUBLIC_IP`: Public IP of your EC2 instance (required)
-- `DEMO_PORT`: Port to test (default: `80`)
+- `DEMO_PORT`: Port to test (default: `8080`)
 - `SSH_KEY`: Path to SSH private key (default: `~/.ssh/id_rsa`)
 
 **What it checks:**
@@ -186,7 +187,7 @@ Verifies all components of the demo are working correctly.
 **Example:**
 
 ```bash
-./verify-demo.sh 54.123.45.67 80 ~/.ssh/ssh-tips-key.pem
+./verify-demo.sh 54.123.45.67 8080 ~/.ssh/ssh-tips-key.pem
 ```
 
 ### `cleanup.sh`
@@ -207,7 +208,7 @@ Stops and cleans up all demo components.
 
 1. Stops systemd service (if running)
 2. Kills manual SSH tunnel processes
-3. Stops crazy-bat Docker containers
+3. Stops crazy-bat Docker container
 4. Shows remaining listening ports
 
 **Example:**
@@ -249,8 +250,8 @@ terraform output ec2_public_ip
 
 # Share the URL with audience
 # Show stopping/starting crazy-bat to demonstrate the tunnel
-docker stop $(docker ps -q --filter ancestor=crazy-bat)
-docker start $(docker ps -aq --filter ancestor=crazy-bat)
+docker stop crazy-bat
+docker start crazy-bat
 ```
 
 ### Post-Demo
@@ -296,7 +297,7 @@ Install Docker:
 
 ```bash
 # Ubuntu/Debian
-sudo apt-get update && sudo apt-get install docker.io docker-compose
+sudo apt-get update && sudo apt-get install docker.io
 
 # Or use Docker official installation
 curl -fsSL https://get.docker.com -o get-docker.sh

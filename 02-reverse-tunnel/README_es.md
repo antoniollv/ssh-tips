@@ -18,24 +18,24 @@ Servidor web accesible desde internet que físicamente está en tu equipo local,
 
 ```text
 Internet → AWS EC2 (IP pública) ← SSH Tunnel ← Equipo Local (crazy-bat)
-          puerto 80                reverse      puerto 8080
+          puerto 8080              reverse      puerto 8085
 ```
 
 ### Componentes
 
 1. **Equipo Local**
-   - Ejecuta crazy-bat (servidor web con netcat en puerto 8080)
+   - Ejecuta crazy-bat (servidor web con netcat en puerto 8085)
    - Inicia túnel SSH inverso hacia EC2
    - Gestión del túnel mediante systemd
 
 2. **AWS EC2 (Bastion)**
    - Instancia t2.micro con IP pública
    - Recibe conexión SSH desde equipo local
-   - Expone puerto 80 a internet
-   - Security Group: permite tráfico en puerto 80
+   - Expone puerto 8080 a internet
+   - Security Group: permite tráfico en puerto 8080
 
 3. **Audiencia**
-   - Accede a `http://<ec2-public-ip>`
+   - Accede a `http://<ec2-public-ip>:8080`
    - Ve el contenido servido desde el equipo local del presentador
 
 ## 🚀 Demostración Paso a Paso
@@ -86,7 +86,7 @@ After=network.target
 [Service]
 Type=simple
 User=<tu-usuario>
-ExecStart=/usr/bin/ssh -N -R 80:localhost:8080 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ec2-user@<ec2-public-ip> -i /path/to/ssh-key.pem
+ExecStart=/usr/bin/ssh -N -R 8080:localhost:8085 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ec2-user@<ec2-public-ip> -i /path/to/ssh-key.pem
 Restart=always
 RestartSec=10
 
@@ -107,8 +107,8 @@ sudo systemctl status reverse-tunnel.service
 
 **Mostrar a la audiencia:**
 
-1. **Acceso público:** Compartir URL `http://<ec2-public-ip>`
-2. **Verificación local:** Mostrar que crazy-bat está corriendo en `localhost:8080`
+1. **Acceso público:** Compartir URL `http://<ec2-public-ip>:8080`
+2. **Verificación local:** Mostrar que crazy-bat está corriendo en `localhost:8085`
 3. **Túnel activo:** `sudo systemctl status reverse-tunnel.service`
 
 **Prueba empírica:**
@@ -124,9 +124,14 @@ sudo systemctl start crazy-bat
 
 ### 5. Explicaciones Técnicas Durante la Demo
 
-- **¿Cómo funciona `-R 80:localhost:8080`?**
-  - El servidor EC2 escucha en su puerto 80
-  - Cuando alguien se conecta, SSH redirige el tráfico al puerto 8080 del equipo local
+- **¿Cómo funciona `-R 8080:localhost:8085`?**
+  - El servidor EC2 escucha en su puerto 8080
+  - Cuando alguien se conecta, SSH redirige el tráfico al puerto 8085 del equipo local
+  
+- **¿Por qué el flag `-N`?**
+  - Evita la ejecución de comandos remotos
+  - No abre shell interactiva
+  - El proceso solo mantiene el túnel (más limpio y seguro)
   
 - **¿Por qué systemd?**
   - Auto-recuperación si la conexión SSH se pierde
@@ -142,7 +147,7 @@ sudo systemctl start crazy-bat
 - **EC2 Instance:** t2.micro (Free Tier elegible)
 - **Security Group:**
   - Inbound: Puerto 22 (SSH desde tu IP)
-  - Inbound: Puerto 80 (HTTP desde 0.0.0.0/0)
+  - Inbound: Puerto 8080 (HTTP desde 0.0.0.0/0)
 - **Key Pair:** Para autenticación SSH
 
 ### Local
@@ -178,8 +183,8 @@ ssh -v -N -R 8080:localhost:8080 ec2-user@<ec2-public-ip> -i /path/to/key.pem
 ### La web no es accesible desde internet
 
 ```bash
-# Verificar que EC2 está escuchando en 80
-ssh ec2-user@<ec2-public-ip> 'sudo netstat -tlnp | grep :80'
+# Verificar que EC2 está escuchando en 8080
+ssh ec2-user@<ec2-public-ip> 'sudo netstat -tlnp | grep :8080'
 
 # Revisar Security Group en la consola de AWS
 # Asegurar que GatewayPorts esté habilitado en sshd_config del EC2

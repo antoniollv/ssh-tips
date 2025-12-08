@@ -53,7 +53,7 @@ error() {
 
 # Configuration
 CRAZY_BAT_DIR="${1:-$HOME/DevOps/crazy-bat}"
-PORT="${2:-8080}"
+PORT="${2:-8085}"
 
 section "🦇 CRAZY-BAT WEB SERVER SETUP"
 
@@ -93,35 +93,33 @@ else
     exit 1
 fi
 
-if command -v docker-compose &> /dev/null || docker compose version &> /dev/null; then
-    run_cmd "docker compose version || docker-compose --version"
-    success "Docker Compose is installed"
-else
-    error "Docker Compose is not installed"
-    exit 1
-fi
-
-section "4️⃣  Stop Any Existing crazy-bat Instance"
+section "4️⃣  Stop Any Existing crazy-bat Container"
 
 info "Stopping any running crazy-bat containers..."
-run_cmd "cd $CRAZY_BAT_DIR && (docker compose down 2>/dev/null || docker-compose down 2>/dev/null || echo 'No containers to stop')"
+run_cmd "docker stop crazy-bat 2>/dev/null || echo 'No container to stop'"
+run_cmd "docker rm crazy-bat 2>/dev/null || echo 'No container to remove'"
 
-section "5️⃣  Build and Start crazy-bat"
+section "5️⃣  Build Docker Image"
 
-info "Building and starting crazy-bat with Docker Compose..."
-run_cmd "cd $CRAZY_BAT_DIR && (docker compose up -d --build || docker-compose up -d --build)"
+info "Building crazy-bat Docker image..."
+run_cmd "cd $CRAZY_BAT_DIR && docker build -t crazy-bat ."
+
+section "6️⃣  Start crazy-bat Container"
+
+info "Starting crazy-bat container on port $PORT..."
+run_cmd "docker run -d --name crazy-bat -p $PORT:8080 -e BAT_SAY='SSH Tips Demo - Reverse Tunnel' crazy-bat"
 
 success "crazy-bat is starting..."
 echo ""
-info "Waiting 3 seconds for the service to be ready..."
-sleep 3
+info "Waiting 2 seconds for the service to be ready..."
+sleep 2
 
-section "6️⃣  Verify crazy-bat is Running"
+section "7️⃣  Verify crazy-bat is Running"
 
 info "Checking Docker container status..."
-run_cmd "docker ps | grep -i crazy-bat || docker ps -a | grep -i crazy-bat"
+run_cmd "docker ps | grep crazy-bat"
 
-section "7️⃣  Test Local Access"
+section "8️⃣  Test Local Access"
 
 info "Testing HTTP access on localhost:$PORT..."
 run_cmd "curl -s -o /dev/null -w 'HTTP Status: %{http_code}\n' http://localhost:$PORT"
@@ -138,10 +136,10 @@ echo "Access it locally:"
 echo -e "  ${CYAN}${BOLD}http://localhost:$PORT${NC}"
 echo ""
 echo "View logs:"
-echo -e "  ${YELLOW}docker logs -f \$(docker ps -q --filter ancestor=crazy-bat)${NC}"
+echo -e "  ${YELLOW}docker logs -f crazy-bat${NC}"
 echo ""
 echo "Stop the server:"
-echo -e "  ${YELLOW}cd $CRAZY_BAT_DIR && docker compose down${NC}"
+echo -e "  ${YELLOW}docker stop crazy-bat && docker rm crazy-bat${NC}"
 echo ""
 info "Next step: Run ./setup-tunnel.sh to expose it to the internet"
 echo ""

@@ -152,7 +152,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### Reverse Tunnel Command:" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "ssh -N -R 80:localhost:8080 ec2-user@${{ steps.outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "ssh -N -R 8080:localhost:8085 ec2-user@${{ steps.outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
       
       - name: Upload Terraform Plan
