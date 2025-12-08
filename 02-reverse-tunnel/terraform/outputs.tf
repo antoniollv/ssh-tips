@@ -32,3 +32,9 @@ output "security_group_id" {
   description = "Security Group ID for the bastion"
   value       = aws_security_group.bastion.id
 }
+
+output "temp_private_key" {
+  description = "Temporary SSH private key (only if no key was provided)"
+  value       = var.ssh_public_key == "" ? tls_private_key.temp_key[0].private_key_pem : "Using provided SSH key"
+  sensitive   = true
+}
