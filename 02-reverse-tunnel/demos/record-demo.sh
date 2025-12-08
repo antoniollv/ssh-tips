@@ -87,6 +87,10 @@ set -e
 EC2_IP="$1"
 PARENT_DIR="$2"
 
+# Save original prompt and simplify it
+ORIGINAL_PS1="$PS1"
+export PS1='$ '
+
 cd "$PARENT_DIR"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -96,15 +100,18 @@ echo ""
 
 echo "📋 Initial state: Everything should fail"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://localhost:8085"
 curl -s http://localhost:8085 || echo "❌ Local KO (expected)"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://${EC2_IP}:8080"
 curl -s http://${EC2_IP}:8080 || echo "❌ Remote KO (expected)"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 sleep 2
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 echo "📦 Step 1: Starting crazy-bat web server..."
 echo ""
 ./setup-crazy-bat.sh
@@ -114,15 +121,19 @@ sleep 2
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🔍 Step 2: Testing after starting container"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://localhost:8085"
-curl -s http://localhost:8085 && echo "✅ Local OK"
+curl -s http://localhost:8085 && echo ""
+echo "✅ Local OK"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://${EC2_IP}:8080"
 curl -s http://${EC2_IP}:8080 || echo "❌ Remote KO (expected - no tunnel yet)"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 sleep 2
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 echo "🔗 Step 3: Establishing SSH reverse tunnel in background..."
 echo ""
 echo "Command: ssh -N -R 8080:localhost:8085 ec2-user@${EC2_IP}"
@@ -139,15 +150,20 @@ sleep 3
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Step 4: Testing after tunnel is established"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://localhost:8085"
-curl -s http://localhost:8085 && echo "✅ Local OK"
+curl -s http://localhost:8085 && echo ""
+echo "✅ Local OK"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://${EC2_IP}:8080"
-curl -s http://${EC2_IP}:8080 && echo "✅ Remote OK (tunnel working!)"
+curl -s http://${EC2_IP}:8080 && echo ""
+echo "✅ Remote OK (tunnel working!)"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 sleep 2
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 echo "🔪 Step 5: Killing the SSH tunnel..."
 echo ""
 echo "Command: kill $TUNNEL_PID"
@@ -159,15 +175,19 @@ sleep 2
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🔍 Step 6: Testing after tunnel is killed"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://localhost:8085"
-curl -s http://localhost:8085 && echo "✅ Local OK (container still running)"
+curl -s http://localhost:8085 && echo ""
+echo "✅ Local OK (container still running)"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://${EC2_IP}:8080"
 curl -s http://${EC2_IP}:8080 || echo "❌ Remote KO (tunnel is down)"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 sleep 2
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 echo "🛑 Step 7: Stopping crazy-bat container..."
 echo ""
 echo "Command: docker stop crazy-bat && docker rm crazy-bat"
@@ -180,17 +200,23 @@ sleep 2
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📋 Final state: Everything should fail again"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://localhost:8085"
 curl -s http://localhost:8085 || echo "❌ Local KO (container stopped)"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Command: curl http://${EC2_IP}:8080"
 curl -s http://${EC2_IP}:8080 || echo "❌ Remote KO (no tunnel, no container)"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✨ Demo complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+# Restore original prompt
+export PS1="$ORIGINAL_PS1"
 
 EOFSCRIPT
         chmod +x "$TEMP_SCRIPT"
