@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Script to guide recording of asciinema demos
-# Provides interactive menu to record different parts
+# Script to record automated asciinema demos
+# Executes the demo steps automatically
 
 set -e
 
@@ -41,43 +41,115 @@ EC2_IP="${1:-}"
 if [ -z "$EC2_IP" ]; then
     echo -e "${YELLOW}⚠${NC} No EC2 IP provided"
     echo ""
-    read -p "Enter EC2 Public IP (or press Enter to skip): " EC2_IP
+    read -p "Enter EC2 Public IP: " EC2_IP
     echo ""
+    if [ -z "$EC2_IP" ]; then
+        echo -e "${RED}✗${NC} EC2 IP is required"
+        exit 1
+    fi
 fi
 
 # Menu
 echo "Select what to record:"
 echo ""
-echo "  ${CYAN}1${NC} - Complete demo (all steps)"
-echo "  ${CYAN}2${NC} - Step 1: Setup crazy-bat"
-echo "  ${CYAN}3${NC} - Step 2: SSH Tunnel"
-echo "  ${CYAN}4${NC} - Step 3: Verification"
-echo "  ${CYAN}5${NC} - Custom recording"
-echo "  ${CYAN}q${NC} - Quit"
+echo "  1 - Complete demo (automated)"
+echo "  2 - Step 1: Setup crazy-bat"
+echo "  3 - Step 2: SSH Tunnel demo"
+echo "  4 - Step 3: Verification"
+echo "  q - Quit"
 echo ""
 read -p "Choose option: " choice
 
 case $choice in
     1)
         echo ""
-        echo -e "${BLUE}${BOLD}Recording Complete Demo${NC}"
+        echo -e "${BLUE}${BOLD}Recording Complete Demo (Automated)${NC}"
         echo ""
-        echo "This will record the entire demonstration."
-        echo ""
-        echo -e "${YELLOW}Steps to follow:${NC}"
-        echo "  1. Run: ./setup-crazy-bat.sh"
-        echo "  2. Wait for container to start"
-        echo "  3. In another terminal: ./setup-tunnel.sh $EC2_IP"
-        echo "  4. In another terminal: ./verify-demo.sh $EC2_IP"
-        echo "  5. Show curl http://$EC2_IP:8080"
-        echo "  6. Press Ctrl+D when done"
+        echo "This will automatically:"
+        echo "  1. Setup crazy-bat container"
+        echo "  2. Launch SSH tunnel in background"
+        echo "  3. Test public URL (should work)"
+        echo "  4. Kill tunnel"
+        echo "  5. Test again (should fail)"
         echo ""
         read -p "Press Enter to start recording..."
         
+        # Create temporary script to run inside asciinema
+        TEMP_SCRIPT=$(mktemp)
+        cat > "$TEMP_SCRIPT" << 'EOFSCRIPT'
+#!/bin/bash
+set -e
+
+EC2_IP="$1"
+PARENT_DIR="$2"
+
+cd "$PARENT_DIR"
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🎯 SSH Tips - Case 1: Reverse Tunnel Demonstration"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+echo "📦 Step 1: Setting up crazy-bat web server..."
+echo ""
+./setup-crazy-bat.sh
+echo ""
+
+echo "🔗 Step 2: Establishing SSH reverse tunnel in background..."
+echo ""
+echo "Command: ssh -N -R 8080:localhost:8085 ec2-user@${EC2_IP}"
+ssh -N -R 8080:localhost:8085 \
+    -o StrictHostKeyChecking=no \
+    -o ServerAliveInterval=60 \
+    -i ~/.ssh/id_rsa.pub \
+    ec2-user@${EC2_IP} &
+TUNNEL_PID=$!
+echo "Tunnel PID: $TUNNEL_PID"
+echo ""
+sleep 3
+
+echo "✅ Step 3: Testing public URL (tunnel is active)..."
+echo ""
+echo "Command: curl http://${EC2_IP}:8080"
+curl -s http://${EC2_IP}:8080 || true
+echo ""
+echo ""
+sleep 2
+
+echo "🔪 Step 4: Killing the SSH tunnel..."
+echo ""
+echo "Command: kill $TUNNEL_PID"
+kill $TUNNEL_PID 2>/dev/null || true
+echo "Tunnel stopped."
+echo ""
+sleep 2
+
+echo "❌ Step 5: Testing public URL again (should fail now)..."
+echo ""
+echo "Command: curl http://${EC2_IP}:8080"
+curl -s http://${EC2_IP}:8080 || echo "Connection failed (expected - tunnel is down)"
+echo ""
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✨ Demo complete!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Cleanup
+docker stop crazy-bat 2>/dev/null || true
+docker rm crazy-bat 2>/dev/null || true
+
+EOFSCRIPT
+        chmod +x "$TEMP_SCRIPT"
+        
         cd "$PARENT_DIR"
-        asciinema rec -t "SSH Tips - Case 1: Reverse Tunnel (Complete)" \
-                      --idle-time-limit 3 \
+        asciinema rec -c "$TEMP_SCRIPT $EC2_IP $PARENT_DIR" \
+                      -t "SSH Tips - Case 1: Reverse Tunnel (Complete)" \
+                      --idle-time-limit 2 \
                       demos/case01-complete-demo.cast
+        
+        rm -f "$TEMP_SCRIPT"
         ;;
     
     2)
@@ -98,34 +170,86 @@ case $choice in
         ;;
     
     3)
-        if [ -z "$EC2_IP" ]; then
-            echo -e "${RED}✗${NC} EC2 IP is required for this step"
-            exit 1
-        fi
-        
         echo ""
-        echo -e "${BLUE}${BOLD}Recording Step 2: SSH Tunnel${NC}"
+        echo -e "${BLUE}${BOLD}Recording Step 2: SSH Tunnel Demo (Automated)${NC}"
         echo ""
-        echo -e "${YELLOW}Steps to follow:${NC}"
-        echo "  1. Run: ./setup-tunnel.sh $EC2_IP"
-        echo "  2. Wait for connection"
-        echo "  3. Press Ctrl+C to stop tunnel"
-        echo "  4. Press Ctrl+D to stop recording"
+        echo "This will automatically:"
+        echo "  1. Launch tunnel in background"
+        echo "  2. Test with curl (should work)"
+        echo "  3. Kill tunnel"
+        echo "  4. Test again (should fail)"
         echo ""
         read -p "Press Enter to start recording..."
         
+        # Create temporary script for tunnel demo
+        TEMP_SCRIPT=$(mktemp)
+        cat > "$TEMP_SCRIPT" << 'EOFSCRIPT'
+#!/bin/bash
+set -e
+
+EC2_IP="$1"
+PARENT_DIR="$2"
+
+cd "$PARENT_DIR"
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔗 SSH Reverse Tunnel Demonstration"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+echo "Starting SSH reverse tunnel in background..."
+echo "Command: ssh -N -R 8080:localhost:8085 ec2-user@${EC2_IP}"
+echo ""
+ssh -N -R 8080:localhost:8085 \
+    -o StrictHostKeyChecking=no \
+    -o ServerAliveInterval=60 \
+    -i ~/.ssh/id_rsa.pub \
+    ec2-user@${EC2_IP} &
+TUNNEL_PID=$!
+echo "✓ Tunnel established (PID: $TUNNEL_PID)"
+echo ""
+sleep 3
+
+echo "Testing public access (tunnel active)..."
+echo "Command: curl http://${EC2_IP}:8080"
+echo ""
+curl -s http://${EC2_IP}:8080
+echo ""
+echo ""
+sleep 2
+
+echo "Stopping tunnel..."
+echo "Command: kill $TUNNEL_PID"
+echo ""
+kill $TUNNEL_PID 2>/dev/null || true
+echo "✓ Tunnel stopped"
+echo ""
+sleep 2
+
+echo "Testing public access again (tunnel down)..."
+echo "Command: curl http://${EC2_IP}:8080"
+echo ""
+curl -s http://${EC2_IP}:8080 || echo "✗ Connection failed (expected)"
+echo ""
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Demo complete!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+EOFSCRIPT
+        chmod +x "$TEMP_SCRIPT"
+        
         cd "$PARENT_DIR"
-        asciinema rec -t "Step 2: SSH Reverse Tunnel" \
+        asciinema rec -c "$TEMP_SCRIPT $EC2_IP $PARENT_DIR" \
+                      -t "Step 2: SSH Reverse Tunnel Demo" \
                       --idle-time-limit 2 \
                       demos/case01-step2-tunnel.cast
+        
+        rm -f "$TEMP_SCRIPT"
         ;;
     
     4)
-        if [ -z "$EC2_IP" ]; then
-            echo -e "${RED}✗${NC} EC2 IP is required for this step"
-            exit 1
-        fi
-        
         echo ""
         echo -e "${BLUE}${BOLD}Recording Step 3: Verification${NC}"
         echo ""
@@ -140,26 +264,6 @@ case $choice in
         asciinema rec -t "Step 3: Verification" \
                       --idle-time-limit 2 \
                       demos/case01-step3-verify.cast
-        ;;
-    
-    5)
-        echo ""
-        read -p "Enter title for recording: " title
-        read -p "Enter filename (without .cast): " filename
-        
-        if [ -z "$filename" ]; then
-            filename="custom-recording"
-        fi
-        
-        echo ""
-        echo -e "${BLUE}${BOLD}Recording Custom Demo${NC}"
-        echo ""
-        read -p "Press Enter to start recording..."
-        
-        cd "$PARENT_DIR"
-        asciinema rec -t "$title" \
-                      --idle-time-limit 2 \
-                      "demos/${filename}.cast"
         ;;
     
     q|Q)
