@@ -45,6 +45,7 @@ The demonstration includes automated scripts that handle all setup and verificat
 ### Prerequisites
 
 1. **AWS Infrastructure Deployed:**
+
    ```bash
    # Via GitHub Actions (recommended)
    # Go to Actions → "02 - Reverse Tunnel Infrastructure" → Run workflow
@@ -56,6 +57,7 @@ The demonstration includes automated scripts that handle all setup and verificat
    ```
 
 2. **Get EC2 Public IP:**
+
    ```bash
    # From Terraform output
    terraform output ec2_public_ip
@@ -102,6 +104,7 @@ cd 02-reverse-tunnel/demos
 ```
 
 **What the automated recording shows:**
+
 1. Initial state: Local KO, Remote KO
 2. Start crazy-bat: Local OK, Remote KO
 3. Establish tunnel: Local OK, Remote OK
@@ -109,6 +112,7 @@ cd 02-reverse-tunnel/demos
 5. Stop container: Local KO, Remote KO
 
 **Playback recordings:**
+
 ```bash
 asciinema play demos/case01-complete-demo.cast
 ```
@@ -230,6 +234,7 @@ Sets up the crazy-bat web server in a Docker container.
 ```
 
 **What it does:**
+
 - Clones crazy-bat repository if not present
 - Builds Docker image
 - Runs container on port 8085 with custom message
@@ -246,6 +251,7 @@ Establishes the SSH reverse tunnel from local machine to EC2.
 ```
 
 **What it does:**
+
 - Validates SSH key exists and has correct permissions
 - Tests SSH connectivity to EC2
 - Verifies local service is running on port 8085
@@ -263,6 +269,7 @@ Comprehensive verification of the complete setup.
 ```
 
 **Verification steps:**
+
 1. ✅ Local service responding on port 8085
 2. ✅ SSH connection to EC2 working
 3. ✅ Tunnel process is active
@@ -279,12 +286,14 @@ Installs SSH tunnel as a persistent systemd service.
 ```
 
 **What it does:**
+
 - Creates `/etc/systemd/system/reverse-tunnel.service`
 - Configures auto-restart on failure
 - Enables service to start on boot
 - Starts the service immediately
 
 **Management:**
+
 ```bash
 sudo systemctl status reverse-tunnel
 sudo systemctl stop reverse-tunnel
@@ -301,6 +310,7 @@ Stops and removes all demo components.
 ```
 
 **What it does:**
+
 - Stops systemd service (if installed)
 - Kills manual SSH tunnel processes
 - Stops and removes Docker container
@@ -334,12 +344,14 @@ cd 02-reverse-tunnel/demos
 ```
 
 **Available recordings:**
+
 - Option 1: Complete automated demo (all state transitions)
 - Option 2: Setup crazy-bat only
 - Option 3: SSH tunnel demonstration
 - Option 4: Verification steps
 
 **Playback:**
+
 ```bash
 # View recording
 asciinema play demos/case01-complete-demo.cast
@@ -355,7 +367,7 @@ See [demos/README_demos.md](demos/README_demos.md) for complete asciinema docume
 
 ## 📁 Project Structure
 
-```
+```text
 02-reverse-tunnel/
 ├── terraform/              # Infrastructure as Code
 │   ├── main.tf            # S3 backend, AWS provider
@@ -453,7 +465,7 @@ chmod 600 /path/to/key.pem
   - ✅ Local SSH key configured (~/.ssh/id_rsa)
   - ✅ Docker installed and running
   - ✅ Asciinema recording created as backup
-- **Backup plan:** 
+- **Backup plan:**
   - Primary: Run automated demo with scripts
   - Fallback: Play pre-recorded `asciinema play demos/case01-complete-demo.cast`
 - **Key messages:**

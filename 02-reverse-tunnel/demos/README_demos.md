@@ -50,7 +50,7 @@ curl http://<EC2_PUBLIC_IP>:8080
 
 ### Record Individual Steps
 
-**Step 1: Setup crazy-bat**
+#### Step 1: Setup crazy-bat
 
 ```bash
 asciinema rec -t "Step 1: Setup crazy-bat" \
@@ -62,7 +62,7 @@ asciinema rec -t "Step 1: Setup crazy-bat" \
 # Ctrl+D to finish
 ```
 
-**Step 2: SSH Tunnel**
+#### Step 2: SSH Tunnel
 
 ```bash
 asciinema rec -t "Step 2: SSH Reverse Tunnel" \
@@ -74,7 +74,7 @@ asciinema rec -t "Step 2: SSH Reverse Tunnel" \
 # Press Ctrl+C to stop tunnel, then Ctrl+D to stop recording
 ```
 
-**Step 3: Verification**
+#### Step 3: Verification
 
 ```bash
 asciinema rec -t "Step 3: Verification" \
@@ -129,6 +129,7 @@ asciinema upload demos/case01-complete-demo.cast
 ```
 
 Benefits:
+
 - Shareable link for attendees
 - Embedded player in web pages
 - No local file needed
@@ -180,11 +181,13 @@ svg-term --in demos/case01-complete-demo.cast \
 ### Before Recording
 
 1. **Clean terminal:**
+
    ```bash
    clear
    ```
 
 2. **Set PS1 prompt (optional):**
+
    ```bash
    export PS1='$ '
    ```
@@ -197,12 +200,14 @@ svg-term --in demos/case01-complete-demo.cast \
 
 1. **Type slowly and clearly** - audience needs to read
 2. **Add pauses** with comments:
+
    ```bash
    echo "Waiting for service to start..."
    sleep 2
    ```
 
 3. **Show outputs clearly:**
+
    ```bash
    echo "=== Starting crazy-bat ==="
    ./setup-crazy-bat.sh
@@ -213,6 +218,7 @@ svg-term --in demos/case01-complete-demo.cast \
 ### After Recording
 
 1. **Review immediately:**
+
    ```bash
    asciinema play demos/your-recording.cast
    ```
@@ -220,6 +226,7 @@ svg-term --in demos/case01-complete-demo.cast \
 2. **Re-record if needed** - it's quick!
 
 3. **Add to git** (they're just text files):
+
    ```bash
    git add demos/*.cast
    git commit -m "Add asciinema demos for case 01"
@@ -278,11 +285,13 @@ asciinema play -s 0.8 demos/recording.cast  # 0.8x speed
 For this 8-10 minute demo:
 
 **Option 1: Single complete recording** (recommended for backup)
+
 - Record entire flow once perfectly
 - Use during presentation if live demo fails
 - Duration: 5-7 minutes actual execution
 
 **Option 2: Split recordings** (recommended for teaching)
+
 - Record each major step separately
 - Easier to re-record individual parts
 - More flexibility during presentation
