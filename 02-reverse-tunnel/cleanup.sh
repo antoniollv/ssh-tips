@@ -77,15 +77,15 @@ fi
 section "2️⃣  Kill Manual SSH Tunnel Processes"
 
 info "Looking for manual SSH tunnel processes..."
-if pgrep -f "ssh.*-R.*(80|8080)" > /dev/null; then
+if pgrep -f "ssh.*-R.*8080" > /dev/null; then
     warn "Found running SSH tunnel processes"
-    run_cmd "ps aux | grep -E '[s]sh.*-R.*(80|8080)'"
+    run_cmd "ps aux | grep '[s]sh.*-R.*8080'"
     
     info "Kill these processes? (y/N) "
     read -p "" -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        run_cmd "pkill -f 'ssh.*-R.*(80|8080)' || echo 'No processes to kill'"
+        run_cmd "pkill -f 'ssh.*-R.*8080' || echo 'No processes to kill'"
         success "SSH tunnel processes terminated"
     fi
 else
@@ -101,8 +101,8 @@ success "crazy-bat stopped"
 
 section "4️⃣  Check for Listening Ports"
 
-info "Checking for services still listening on ports 80 or 8080..."
-run_cmd "sudo netstat -tlnp | grep -E ':(80|8080)' || sudo ss -tlnp | grep -E ':(80|8080)' || echo 'No services listening on ports 80 or 8080'"
+info "Checking for services still listening on ports 8080 or 8085..."
+run_cmd "netstat -tlnp 2>/dev/null | grep -E ':(8080|8085)' || ss -tlnp 2>/dev/null | grep -E ':(8080|8085)' || echo 'No services listening on ports 8080 or 8085'"
 
 section "✅ CLEANUP COMPLETE"
 

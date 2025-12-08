@@ -1,0 +1,10 @@
+# Ignore generated media files (GIF, SVG)
+*.gif
+*.svg
+*.mp4
+
+# Keep .cast files (they're small text files)
+!*.cast
+
+# Temporary files
+*.tmp
