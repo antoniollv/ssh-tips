@@ -4,8 +4,8 @@
 
 **Duración:** 40 minutos  
 **Formato:** Presentación remota vía Teams  
-**Audiencia:** Profesionales IT (desarrolladores, sysadmins, DevOps) con conocimientos de SSH  
-**Objetivo:** Mostrar capacidades avanzadas de SSH mediante demostraciones prácticas en vivo
+**Audiencia:** Profesionales IT con conocimientos de SSH  
+**Objetivo:** Mostrar capacidades avanzadas de SSH mediante demostraciones prácticas
 
 ## 🎯 Estructura de la Ponencia
 
@@ -89,7 +89,7 @@ Equipo local → Bastion (IP pública) → Servidor Privado (nginx/crazy-bat)
 **Arquitectura:**
 
 ```text
-Laptop (X11 client) ← SSH + X11 ← AWS EC2 (X11 server + app gráfica)
+Equipo local (X11 client) ← SSH + X11 ← AWS EC2 (X11 server + app gráfica)
 ventana local                     htop/xeyes/stress-ng
 ```
 

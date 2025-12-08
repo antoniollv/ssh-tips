@@ -38,6 +38,14 @@ Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
    - Accesses `http://<ec2-public-ip>:8080`
    - Sees content served from presenter's local machine
 
+## 🎬 Live Demo Recording
+
+Watch the complete automated demonstration showing all state transitions:
+
+[![asciicast](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq.svg)](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq)
+
+*Click to watch the interactive recording. The demo shows Local/Remote service states (KO/OK) before and after starting containers and tunnels.*
+
 ## 🚀 Quick Start with Automated Scripts
 
 The demonstration includes automated scripts that handle all setup and verification steps.

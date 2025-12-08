@@ -73,7 +73,7 @@ Ejecutar aplicaciones gráficas en el servidor pero verlas en tu pantalla local.
 
 ### 🦘 ProxyJump
 
-Saltar por múltiples bastiones para alcanzar servidores internos.
+Saltar por múltiples equipos para alcanzar servidores remotos.
 
 ### 🔐 Autenticación por Claves
 
@@ -89,7 +89,7 @@ En esta ponencia demostraremos **3 casos prácticos** que muestran el poder real
 
 Acceder a un servidor web que está en tu equipo local, desde internet, sin tener IP pública.
 
-Veremos como configurar *Systemd* para que mantenga el túnel levantado
+Posibilidad de configurar *Systemd* para que mantenga el túnel levantado
 
 **Técnicas:**
 
@@ -97,11 +97,11 @@ Veremos como configurar *Systemd* para que mantenga el túnel levantado
 - Gestión con systemd
 - Crazy-bat (servidor web con netcat)
 
-### 2️⃣ Salto de Bastiones + Servicio Privado (12 min)
+### 2️⃣ Salto de Servidores + Servicio Privado (12 min)
 
 #### ProxyJump + Port Forwarding Integrados
 
-Saltar por un bastión Y acceder a un servicio web privado, todo en un solo comando.
+Saltar por un servidor Y acceder a un servicio privado, todo en un solo comando.
 
 **Técnicas:**
 

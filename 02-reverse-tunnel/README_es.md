@@ -38,6 +38,14 @@ Internet → AWS EC2 (IP pública) ← SSH Tunnel ← Equipo Local (crazy-bat)
    - Accede a `http://<ec2-public-ip>:8080`
    - Ve el contenido servido desde el equipo local del presentador
 
+## 🎬 Grabación de la Demostración en Vivo
+
+Mira la demostración completa automatizada mostrando todas las transiciones de estado:
+
+[![asciicast](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq.svg)](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq)
+
+*Haz clic para ver la grabación interactiva. La demo muestra los estados Local/Remoto (KO/OK) antes y después de iniciar contenedores y túneles.*
+
 ## 🚀 Demostración Paso a Paso
 
 ### 1. Preparación (Pre-demostración)
