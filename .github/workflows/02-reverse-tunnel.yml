@@ -3,6 +3,14 @@ name: Deploy Case 1 - Reverse SSH Tunnel Infrastructure
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'GitHub Environment to use'
+        required: true
+        default: 'poc'
+        type: choice
+        options:
+          - poc
+          - production
       action:
         description: 'Terraform action to perform'
         required: true
@@ -11,13 +19,23 @@ on:
         options:
           - apply
           - destroy
+      aws_region:
+        description: 'AWS Region'
+        required: true
+        default: 'eu-west-1'
+        type: choice
+        options:
+          - eu-west-1
+          - eu-central-1
+          - us-east-1
+          - us-west-2
       ssh_public_key:
         description: 'SSH public key for EC2 access (optional, uses default if empty)'
         required: false
         type: string
 
 env:
-  AWS_REGION: eu-west-1
+  AWS_REGION: ${{ inputs.aws_region }}
   TF_VERSION: 1.6.0
   WORKING_DIR: 02-reverse-tunnel/terraform
 
@@ -25,6 +43,7 @@ jobs:
   terraform:
     name: Terraform ${{ inputs.action }}
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     
     permissions:
       id-token: write
@@ -43,6 +62,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-ReverseTunnel
       
       - name: Get configuration from AWS Secrets Manager
         id: get-config
@@ -132,7 +152,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### Reverse Tunnel Command:" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "ssh -N -R 8080:localhost:8080 ec2-user@${{ steps.outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "ssh -N -R 80:localhost:8080 ec2-user@${{ steps.outputs.outputs.ec2_public_ip }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
       
       - name: Upload Terraform Plan

@@ -18,7 +18,7 @@ Web server accessible from the internet that is physically on your local machine
 
 ```text
 Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
-          port 8080              reverse      port 8080
+          port 80                reverse      port 8080
 ```
 
 ### Components
@@ -31,11 +31,11 @@ Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
 2. **AWS EC2 (Bastion)**
    - t2.micro instance with public IP
    - Receives SSH connection from local machine
-   - Exposes port 8080 to internet
-   - Security Group: allows traffic on port 8080
+   - Exposes port 80 to internet
+   - Security Group: allows traffic on port 80
 
 3. **Audience**
-   - Accesses `http://<ec2-public-ip>:8080`
+   - Accesses `http://<ec2-public-ip>`
    - Sees content served from presenter's local machine
 
 ## 🚀 Step-by-Step Demonstration
@@ -86,7 +86,7 @@ After=network.target
 [Service]
 Type=simple
 User=<your-user>
-ExecStart=/usr/bin/ssh -N -R 8080:localhost:8080 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ec2-user@<ec2-public-ip> -i /path/to/ssh-key.pem
+ExecStart=/usr/bin/ssh -N -R 80:localhost:8080 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ec2-user@<ec2-public-ip> -i /path/to/ssh-key.pem
 Restart=always
 RestartSec=10
 
@@ -107,7 +107,7 @@ sudo systemctl status reverse-tunnel.service
 
 **Show the audience:**
 
-1. **Public access:** Share URL `http://<ec2-public-ip>:8080`
+1. **Public access:** Share URL `http://<ec2-public-ip>`
 2. **Local verification:** Show that crazy-bat is running on `localhost:8080`
 3. **Active tunnel:** `sudo systemctl status reverse-tunnel.service`
 
@@ -124,8 +124,8 @@ sudo systemctl start crazy-bat
 
 ### 5. Technical Explanations During Demo
 
-- **How does `-R 8080:localhost:8080` work?**
-  - The EC2 server listens on its port 8080
+- **How does `-R 80:localhost:8080` work?**
+  - The EC2 server listens on its port 80
   - When someone connects, SSH redirects traffic to the local machine's port 8080
   
 - **Why systemd?**
@@ -142,7 +142,7 @@ sudo systemctl start crazy-bat
 - **EC2 Instance:** t2.micro (Free Tier eligible)
 - **Security Group:**
   - Inbound: Port 22 (SSH from your IP)
-  - Inbound: Port 8080 (HTTP from 0.0.0.0/0)
+  - Inbound: Port 80 (HTTP from 0.0.0.0/0)
 - **Key Pair:** For SSH authentication
 
 ### Local
@@ -178,8 +178,8 @@ ssh -v -N -R 8080:localhost:8080 ec2-user@<ec2-public-ip> -i /path/to/key.pem
 ### Website not accessible from internet
 
 ```bash
-# Verify EC2 is listening on 8080
-ssh ec2-user@<ec2-public-ip> 'sudo netstat -tlnp | grep 8080'
+# Verify EC2 is listening on 80
+ssh ec2-user@<ec2-public-ip> 'sudo netstat -tlnp | grep :80'
 
 # Check Security Group in AWS Console
 # Ensure GatewayPorts is enabled in EC2's sshd_config

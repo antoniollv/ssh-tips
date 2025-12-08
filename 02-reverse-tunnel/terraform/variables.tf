@@ -31,5 +31,5 @@ variable "project_name" {
 variable "demo_port" {
   description = "Port for the reverse tunnel demo"
   type        = number
-  default     = 8080
+  default     = 80
 }
