@@ -38,7 +38,84 @@ Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
    - Accesses `http://<ec2-public-ip>:8080`
    - Sees content served from presenter's local machine
 
-## 🚀 Step-by-Step Demonstration
+## 🚀 Quick Start with Automated Scripts
+
+The demonstration includes automated scripts that handle all setup and verification steps.
+
+### Prerequisites
+
+1. **AWS Infrastructure Deployed:**
+   ```bash
+   # Via GitHub Actions (recommended)
+   # Go to Actions → "02 - Reverse Tunnel Infrastructure" → Run workflow
+   
+   # Or manually with Terraform
+   cd 02-reverse-tunnel/terraform
+   terraform init
+   terraform apply
+   ```
+
+2. **Get EC2 Public IP:**
+   ```bash
+   # From Terraform output
+   terraform output ec2_public_ip
+   
+   # Or from AWS Console
+   ```
+
+### Automated Demo Execution
+
+```bash
+cd 02-reverse-tunnel
+
+# 1. Setup crazy-bat web server (port 8085)
+./setup-crazy-bat.sh
+
+# 2. Establish SSH reverse tunnel (8080:localhost:8085)
+./setup-tunnel.sh <EC2_PUBLIC_IP>
+
+# 3. Verify complete setup
+./verify-demo.sh <EC2_PUBLIC_IP>
+
+# 4. (Optional) Install as systemd service for persistence
+./install-systemd-service.sh <EC2_PUBLIC_IP>
+
+# 5. Cleanup when done
+./cleanup.sh
+```
+
+### Recording with Asciinema
+
+An automated recording script is provided to create consistent demos:
+
+```bash
+cd 02-reverse-tunnel/demos
+
+# Interactive menu for recording
+./record-demo.sh <EC2_PUBLIC_IP>
+
+# Options:
+#   1 - Complete demo (automated)
+#   2 - Step 1: Setup crazy-bat
+#   3 - Step 2: SSH Tunnel demo
+#   4 - Step 3: Verification
+```
+
+**What the automated recording shows:**
+1. Initial state: Local KO, Remote KO
+2. Start crazy-bat: Local OK, Remote KO
+3. Establish tunnel: Local OK, Remote OK
+4. Kill tunnel: Local OK, Remote KO
+5. Stop container: Local KO, Remote KO
+
+**Playback recordings:**
+```bash
+asciinema play demos/case01-complete-demo.cast
+```
+
+See [demos/README_demos.md](demos/README_demos.md) for detailed asciinema usage.
+
+## 🚀 Step-by-Step Demonstration (Manual)
 
 ### 1. Preparation (Pre-demonstration)
 
@@ -140,6 +217,95 @@ sudo systemctl start crazy-bat
 
 - **Advanced alternative:** Mention `autossh` for production environments (documented in `99-docs/README_autossh.md`)
 
+## 📦 Automation Scripts
+
+All scripts are located in `/02-reverse-tunnel/` and include verbose output with colored commands for presentation clarity.
+
+### setup-crazy-bat.sh
+
+Sets up the crazy-bat web server in a Docker container.
+
+```bash
+./setup-crazy-bat.sh
+```
+
+**What it does:**
+- Clones crazy-bat repository if not present
+- Builds Docker image
+- Runs container on port 8085 with custom message
+- Validates service is responding
+
+**Port:** 8085 (local only, not exposed to internet)
+
+### setup-tunnel.sh
+
+Establishes the SSH reverse tunnel from local machine to EC2.
+
+```bash
+./setup-tunnel.sh <EC2_PUBLIC_IP>
+```
+
+**What it does:**
+- Validates SSH key exists and has correct permissions
+- Tests SSH connectivity to EC2
+- Verifies local service is running on port 8085
+- Establishes reverse tunnel: `-R 8080:localhost:8085`
+- Runs in foreground (Ctrl+C to stop)
+
+**Port mapping:** EC2:8080 → localhost:8085
+
+### verify-demo.sh
+
+Comprehensive verification of the complete setup.
+
+```bash
+./verify-demo.sh <EC2_PUBLIC_IP>
+```
+
+**Verification steps:**
+1. ✅ Local service responding on port 8085
+2. ✅ SSH connection to EC2 working
+3. ✅ Tunnel process is active
+4. ✅ EC2 listening on port 8080
+5. ✅ Public URL accessible from internet
+6. ✅ Content matches (local vs public)
+
+### install-systemd-service.sh
+
+Installs SSH tunnel as a persistent systemd service.
+
+```bash
+./install-systemd-service.sh <EC2_PUBLIC_IP>
+```
+
+**What it does:**
+- Creates `/etc/systemd/system/reverse-tunnel.service`
+- Configures auto-restart on failure
+- Enables service to start on boot
+- Starts the service immediately
+
+**Management:**
+```bash
+sudo systemctl status reverse-tunnel
+sudo systemctl stop reverse-tunnel
+sudo systemctl start reverse-tunnel
+sudo journalctl -u reverse-tunnel -f
+```
+
+### cleanup.sh
+
+Stops and removes all demo components.
+
+```bash
+./cleanup.sh
+```
+
+**What it does:**
+- Stops systemd service (if installed)
+- Kills manual SSH tunnel processes
+- Stops and removes Docker container
+- Verifies no processes listening on ports 8080/8085
+
 ## 📦 Required Resources
 
 ### AWS
@@ -161,12 +327,82 @@ sudo systemctl start crazy-bat
 Create backup recordings for each step:
 
 ```bash
-# Record tunnel configuration
-asciinema rec demo-reverse-tunnel-setup.cast
+cd 02-reverse-tunnel/demos
 
-# Record complete demonstration
-asciinema rec demo-reverse-tunnel-live.cast
+# Interactive recording helper
+./record-demo.sh <EC2_PUBLIC_IP>
 ```
+
+**Available recordings:**
+- Option 1: Complete automated demo (all state transitions)
+- Option 2: Setup crazy-bat only
+- Option 3: SSH tunnel demonstration
+- Option 4: Verification steps
+
+**Playback:**
+```bash
+# View recording
+asciinema play demos/case01-complete-demo.cast
+
+# Slower playback
+asciinema play -s 0.5 demos/case01-complete-demo.cast
+
+# Upload to share
+asciinema upload demos/case01-complete-demo.cast
+```
+
+See [demos/README_demos.md](demos/README_demos.md) for complete asciinema documentation.
+
+## 📁 Project Structure
+
+```
+02-reverse-tunnel/
+├── terraform/              # Infrastructure as Code
+│   ├── main.tf            # S3 backend, AWS provider
+│   ├── ec2.tf             # EC2 instance, Security Group, EIP
+│   ├── variables.tf       # Configuration variables
+│   └── outputs.tf         # Connection information
+├── demos/                 # Asciinema recordings
+│   ├── README_demos.md    # Recording guide
+│   ├── record-demo.sh     # Interactive recording helper
+│   └── *.cast             # Recording files
+├── setup-crazy-bat.sh     # Setup web server
+├── setup-tunnel.sh        # Establish SSH tunnel
+├── verify-demo.sh         # Verify complete setup
+├── install-systemd-service.sh  # Install persistent service
+├── cleanup.sh             # Cleanup all components
+├── reverse-tunnel.service.template  # Systemd template
+├── README.md              # This file (English)
+└── README_es.md           # Spanish version
+```
+
+## 🎯 Presentation Flow
+
+**Recommended timeline:** 12-15 minutes
+
+1. **Introduction (2 min):**
+   - Problem: Need to expose local service without public IP
+   - Solution: Reverse SSH tunnels
+
+2. **Architecture explanation (2 min):**
+   - Show diagram
+   - Explain components and data flow
+
+3. **Live demonstration (6 min):**
+   - Option A: Run automated recording
+   - Option B: Execute scripts live
+   - Show state transitions clearly
+
+4. **Technical deep-dive (3 min):**
+   - Explain `-R` flag
+   - Why `-N` (no remote command)
+   - GatewayPorts configuration
+   - systemd for persistence
+
+5. **Q&A and alternatives (2 min):**
+   - Mention autossh for production
+   - Security considerations
+   - Use cases
 
 ## ⚠️ Troubleshooting
 
@@ -206,13 +442,56 @@ chmod 600 /path/to/key.pem
 - [SSH Remote Port Forwarding](https://www.ssh.com/academy/ssh/tunneling/example)
 - [systemd Service Files](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
 - [Alternative with autossh](../99-docs/README_autossh.md)
+- [Asciinema documentation](https://asciinema.org/docs/usage)
 
 ## 📝 Presenter Notes
 
-- **Estimated time:** 12 minutes
+- **Estimated time:** 12-15 minutes
 - **Prerequisites verified before demo:**
-  - ✅ AWS infrastructure deployed
-  - ✅ crazy-bat running locally
-  - ✅ SSH tunnel active and verified
-  - ✅ Public URL shared with audience
-- **Backup plan:** Asciinema recording ready to play if live demo fails
+  - ✅ AWS infrastructure deployed via GitHub Actions
+  - ✅ EC2 public IP noted and tested
+  - ✅ Local SSH key configured (~/.ssh/id_rsa)
+  - ✅ Docker installed and running
+  - ✅ Asciinema recording created as backup
+- **Backup plan:** 
+  - Primary: Run automated demo with scripts
+  - Fallback: Play pre-recorded `asciinema play demos/case01-complete-demo.cast`
+- **Key messages:**
+  - Reverse tunnels solve "no public IP" problem
+  - SSH is not just for remote shells
+  - systemd makes tunnels production-ready
+  - Perfect for demos, dev environments, IoT devices
+
+## 🎓 Learning Outcomes
+
+After this demonstration, the audience will understand:
+
+1. **Reverse SSH tunnels** (`-R` flag) and how they differ from local forwarding (`-L`)
+2. **Port mapping** between remote and local machines
+3. **GatewayPorts** configuration and why it's needed
+4. **systemd service management** for persistent tunnels
+5. **Practical use cases** for reverse tunnels in real scenarios
+
+## 🔐 Security Considerations
+
+**For production environments:**
+
+- ⚠️ Reverse tunnels expose local services - ensure proper authentication
+- ✅ Use key-based authentication, not passwords
+- ✅ Restrict SSH access with Security Groups / firewall rules
+- ✅ Consider VPN alternatives for permanent solutions
+- ✅ Use `autossh` with connection monitoring (see `99-docs/README_autossh.md`)
+- ✅ Implement application-level authentication on exposed service
+- ⚠️ Be aware of GatewayPorts security implications (allows remote binds)
+
+## 🚀 Real-World Use Cases
+
+1. **Development demos:** Show local work to remote clients/team
+2. **IoT devices:** Access home devices behind NAT/firewall
+3. **CI/CD webhooks:** Receive webhooks on local development machine
+4. **Temporary testing:** Quick public URL for mobile app testing
+5. **Remote support:** Access customer's local environment for debugging
+
+---
+
+**Next Case:** [03 - ProxyJump and Port Forwarding](../03-proxyjump-forwarding/)
