@@ -41,6 +41,7 @@ Brief presentation of SSH and overview of the practical cases to be demonstrated
 ```text
 Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
           port 8080             reverse      port 8085
+       (EC2 public port)                  (local service port)
 ```
 
 **Empirical test:** Stop the local service and watch how the public website goes down.
@@ -181,7 +182,7 @@ Each case has asciinema recordings as backup in case of technical failures.
 
 - [OpenSSH Official Documentation](https://www.openssh.com/)
 - [Crazy-Bat Project](https://github.com/antoniollv/crazy-bat)
-- [Asciinema](https://asciinema.org/)
+- [asciinema](https://asciinema.org/)
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 
 ---

@@ -39,6 +39,10 @@ if [ -z "$OIDC_PROVIDER_ARN" ]; then
     OIDC_PROVIDER_ARN=$(aws iam create-open-id-connect-provider \
         --url https://token.actions.githubusercontent.com \
         --client-id-list sts.amazonaws.com \
+        # NOTE: The following thumbprint is GitHub's current OIDC root CA thumbprint as of June 2024.
+        # If GitHub rotates their certificates, this value will change.
+        # Always verify the latest thumbprint at:
+        # https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#updating-the-thumbprint
         --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1 \
         --query 'OpenIDConnectProviderArn' \
         --output text)
