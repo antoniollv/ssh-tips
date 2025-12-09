@@ -1,17 +1,19 @@
-# SSH Tips & Tricks - Presentation Script
+# SSH Tips & Tricks
 
 ## 📋 General Information
 
+Talk about some practical use cases of the SSH remote access protocol, beyond its usual usage.
+
 **Duration:** 40 minutes  
 **Format:** Remote presentation via Teams  
-**Audience:** IT Professionals (developers, sysadmins, DevOps) with SSH knowledge  
-**Objective:** Demonstrate advanced SSH capabilities through live practical demonstrations
+**Audience:** IT professionals with SSH knowledge  
+**Objective:** Showcase SSH capabilities through practical demonstrations
 
 ## 🎯 Presentation Structure
 
 ### [01. Introduction](01-introduction/) (2 minutes)
 
-Brief presentation of SSH and *overview* of the practical cases to be demonstrated.
+Brief presentation of SSH and overview of the practical cases to be demonstrated.
 
 **Topics to cover:**
 
@@ -19,7 +21,7 @@ Brief presentation of SSH and *overview* of the practical cases to be demonstrat
 - Advanced capabilities: tunneling, forwarding, X11
 - Introduction to the 3 practical cases
 
-📁 **Resources:** [Complete initial presentation](01-introduction/README_introduction.md)
+📁 **Resources:** [Initial presentation](01-introduction/README_introduction.md)
 
 ---
 
@@ -29,46 +31,45 @@ Brief presentation of SSH and *overview* of the practical cases to be demonstrat
 
 **Concept:** Web server accessible from the internet that is physically on your local machine, without a public IP.
 
-**Demonstrated techniques:**
+**Techniques demonstrated:**
 
 - Remote Port Forwarding (`ssh -R`)
-- Tunnel management with systemd
 - Web server with netcat (crazy-bat)
 
 **Architecture:**
 
 ```text
 Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
-          port 8080              reverse      port 8080
+          port 8080             reverse      port 8085
+       (EC2 public port)                  (local service port)
 ```
 
-**Empirical Demonstration:** Stop the local service and watch the public website go down.
+**Empirical test:** Stop the local service and watch how the public website goes down.
 
 📁 **Resources:** [Complete Case 1 documentation](02-reverse-tunnel/)
 
 ---
 
-### [03. Case 2: Bastion Jump + Private Service Access](03-proxyjump-forwarding/) (12 minutes)
+### [03. Case 2: Jumping Through Different Hosts to Access Private Service](03-proxyjump-forwarding/) (12 minutes)
 
-#### ProxyJump + Port Forwarding Integrated
+#### Integrated ProxyJump + Port Forwarding
 
-**Concept:** Access a web service on a private server (no public IP) by jumping through a bastion, all in a single command.
+**Concept:** Access a service on a private server (without public IP).
 
-**Demonstrated techniques:**
+**Techniques demonstrated:**
 
 - ProxyJump (`ssh -J`)
 - Local Port Forwarding (`ssh -L`)
-- Optimized `~/.ssh/config` configuration
 
 **Architecture:**
 
 ```text
-Laptop → Bastion (public IP) → Private Server (nginx/crazy-bat)
-         ssh -J                 private IP only
-         ssh -L 8080:localhost:80
+Local Machine → Bastion (public IP) → Private Server (nginx/crazy-bat)
+          ssh -J                  private IP only
+          ssh -L 8080:localhost:80
 ```
 
-**Result:** Access `http://localhost:8080` in local browser and see the private server's service.
+**Result:** Access a remote database on localhost.
 
 📁 **Resources:** [Complete Case 2 documentation](03-proxyjump-forwarding/)
 
@@ -78,9 +79,9 @@ Laptop → Bastion (public IP) → Private Server (nginx/crazy-bat)
 
 #### X11 Forwarding with Remote CPU Monitor
 
-**Concept:** Run graphical application on AWS but see it on local screen. Demonstrate in real-time how the remote server's CPU spikes.
+**Concept:** Run a graphical application on AWS but see it on your local screen. Demonstrate in real-time how the remote server's CPU spikes.
 
-**Demonstrated techniques:**
+**Techniques demonstrated:**
 
 - X11 Forwarding (`ssh -X`)
 - Remote graphical application execution
@@ -89,11 +90,11 @@ Laptop → Bastion (public IP) → Private Server (nginx/crazy-bat)
 **Architecture:**
 
 ```text
-Laptop (X11 client) ← SSH + X11 ← AWS EC2 (X11 server + GUI app)
-local window                     htop/xeyes/stress-ng
+Local Machine (X11 client) ← SSH + X11 ← AWS EC2 (X11 server + GUI app)
+local window                          htop/xeyes/stress-ng
 ```
 
-**Empirical Demonstration:** Launch stress test on AWS and watch on your local screen as CPU jumps from 5% to 100%.
+**Empirical test:** Launch stress test on AWS and watch on your local screen how CPU jumps from 5% to 100%.
 
 📁 **Resources:** [Complete Case 3 documentation](04-x11-forwarding/)
 
@@ -106,6 +107,8 @@ local window                     htop/xeyes/stress-ng
 - **Jailed SSH users** (chroot + SFTP only)
 - **Legacy SSH algorithms** for connecting to old systems
 - **Dynamic SOCKS Proxy** (`ssh -D`)
+- **Tunnel management with systemd**
+- **Autossh**
 - **Other capabilities:** SCP, SFTP, rsync over SSH
 
 📁 **Resources:** [Additional documentation](99-docs/)
@@ -114,7 +117,7 @@ local window                     htop/xeyes/stress-ng
 
 ### 06. Q&A (1 minute)
 
-Quick questions from the audience.
+Audience questions.
 
 ---
 
@@ -148,7 +151,7 @@ At the end of the presentation, this complete repository is shared with:
 
 - ✅ Terraform code for each case
 - ✅ Configuration scripts
-- ✅ [Asciinema](https://asciinema.org) recordings as backup
+- ✅ [asciinema](https://asciinema.org) recordings
 - ✅ Detailed documentation in English and Spanish
 - ✅ Additional cases not demonstrated live
 
@@ -158,11 +161,11 @@ At the end of the presentation, this complete repository is shared with:
 
 ### Plan B
 
-Each case has *asciinema* recordings as backup in case of technical failures.
+Each case has asciinema recordings as backup in case of technical failures.
 
 ### Timing
 
-- Maintain pace: maximum 12 min per case
+- Keep pace: maximum 12 min per case
 - Reserve time for unexpected issues
 - Questions at the end, not during demos
 
@@ -179,7 +182,7 @@ Each case has *asciinema* recordings as backup in case of technical failures.
 
 - [OpenSSH Official Documentation](https://www.openssh.com/)
 - [Crazy-Bat Project](https://github.com/antoniollv/crazy-bat)
-- [Asciinema](https://asciinema.org/)
+- [asciinema](https://asciinema.org/)
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 
 ---

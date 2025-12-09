@@ -1,0 +1,131 @@
+name: Setup AWS Requirements
+
+on:
+  workflow_dispatch:
+    inputs:
+      github_org:
+        description: 'GitHub organization/owner'
+        required: true
+        default: 'antoniollv'
+      github_repo:
+        description: 'GitHub repository name'
+        required: true
+        default: 'ssh-tips'
+      aws_region:
+        description: 'AWS Region'
+        required: true
+        default: 'eu-west-1'
+        type: choice
+        options:
+          - eu-west-1
+          - eu-central-1
+          - us-east-1
+          - us-west-2
+      tf_state_bucket:
+        description: 'S3 bucket name for Terraform state (must be globally unique)'
+        required: true
+        default: 'ssh-tips-terraform-state'
+      iam_role_name:
+        description: 'IAM role name for GitHub Actions'
+        required: true
+        default: 'GitHubActionsRole-ssh-tips'
+
+env:
+  AWS_REGION: ${{ inputs.aws_region }}
+  TF_STATE_BUCKET: ${{ inputs.tf_state_bucket }}
+  GITHUB_ORG: ${{ inputs.github_org }}
+  GITHUB_REPO: ${{ inputs.github_repo }}
+  IAM_ROLE_NAME: ${{ inputs.iam_role_name }}
+  IAM_POLICY_NAME: GitHubActionsPolicy-ssh-tips
+
+jobs:
+  setup-aws-infrastructure:
+    name: Setup AWS Infrastructure
+    runs-on: ubuntu-latest
+    environment: poc
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Create S3 backend
+        id: s3
+        run: |
+          cd 01-introduction
+          chmod +x create-s3-backend.sh
+          ./create-s3-backend.sh
+      
+      - name: Create GitHub IAM role
+        id: iam
+        run: |
+          cd 01-introduction
+          chmod +x create-github-iam-role.sh
+          OUTPUT=$(./create-github-iam-role.sh)
+          
+          # Extract values from output (don't echo OUTPUT to avoid exposing in logs)
+          ROLE_ARN=$(echo "$OUTPUT" | grep "AWS_ROLE_ARN=" | cut -d'=' -f2)
+          BUCKET=$(echo "$OUTPUT" | grep "TF_STATE_BUCKET=" | cut -d'=' -f2)
+          SECRET_NAME=$(echo "$OUTPUT" | grep "AWS_SECRETS_MANAGER_NAME=" | cut -d'=' -f2)
+          
+          echo "role_arn=$ROLE_ARN" >> $GITHUB_OUTPUT
+          echo "bucket=$BUCKET" >> $GITHUB_OUTPUT
+          echo "secret_name=$SECRET_NAME" >> $GITHUB_OUTPUT
+          
+          # Mask sensitive values in logs
+          echo "::add-mask::$ROLE_ARN"
+          echo "✅ IAM role configured (ARN masked in logs)"
+          echo "✅ Configuration stored in Secrets Manager"
+      
+      - name: Summary
+        run: |
+          echo "### ✅ AWS Infrastructure Setup Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Created/Verified Resources:**" >> $GITHUB_STEP_SUMMARY
+          echo "- S3 Bucket: \`${{ env.TF_STATE_BUCKET }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- IAM Role: \`${{ env.IAM_ROLE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- AWS Region: \`${{ env.AWS_REGION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Secrets Manager: \`${{ steps.iam.outputs.secret_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**📋 Configuration stored securely in AWS Secrets Manager**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**🔑 Required Action:**" >> $GITHUB_STEP_SUMMARY
+          echo "Add the IAM Role ARN as a secret in your repository environment \`poc\`:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Get the Role ARN from AWS Secrets Manager:" >> $GITHUB_STEP_SUMMARY
+          echo '   ```bash' >> $GITHUB_STEP_SUMMARY
+          echo '   aws secretsmanager get-secret-value \' >> $GITHUB_STEP_SUMMARY
+          echo '     --secret-id ssh-tips/github-actions-config \' >> $GITHUB_STEP_SUMMARY
+          echo '     --region eu-west-1 \' >> $GITHUB_STEP_SUMMARY
+          echo '     --query SecretString --output text | jq -r .AWS_ROLE_ARN' >> $GITHUB_STEP_SUMMARY
+          echo '   ```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "2. Add it as \`AWS_ROLE_ARN\` secret in environment \`poc\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**🔒 Security Note:** Role ARN is masked in logs to protect your infrastructure" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "You can now:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Remove temporary \`AWS_ACCESS_KEY_ID\` and \`AWS_SECRET_ACCESS_KEY\` from environment" >> $GITHUB_STEP_SUMMARY
+          echo "2. Run the case workflows (they will use OIDC + Secrets Manager)" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Export outputs
+        run: |
+          echo "AWS_ROLE_ARN=${{ steps.iam.outputs.role_arn }}" >> requirements-setup.txt
+          echo "TF_STATE_BUCKET=${{ steps.iam.outputs.bucket }}" >> requirements-setup.txt
+          echo "AWS_REGION=${{ env.AWS_REGION }}" >> requirements-setup.txt
+      
+      - name: Upload setup info
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-setup-info
+          path: requirements-setup.txt
+          retention-days: 30

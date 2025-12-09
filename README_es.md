@@ -1,11 +1,13 @@
-# SSH Tips & Tricks - Guión de Ponencia
+# SSH Tips & Tricks
 
 ## 📋 Información General
 
+Charla sobre algunos casos prácticos del protocolo de acceso remoto SSH, más allá de su uso habitual.
+
 **Duración:** 40 minutos  
 **Formato:** Presentación remota vía Teams  
-**Audiencia:** Profesionales IT (desarrolladores, sysadmins, DevOps) con conocimientos de SSH  
-**Objetivo:** Mostrar capacidades avanzadas de SSH mediante demostraciones prácticas en vivo
+**Audiencia:** Profesionales IT con conocimientos de SSH  
+**Objetivo:** Mostrar capacidades de SSH mediante demostraciones prácticas
 
 ## 🎯 Estructura de la Ponencia
 
@@ -19,7 +21,7 @@ Breve presentación de SSH y *overview* de los casos prácticos que se demostrar
 - Capacidades avanzadas: tunneling, forwarding, X11
 - Introducción a los 3 casos prácticos
 
-📁 **Recursos:** [Presentación inicial completa](01-introduction/README_introduction_es.md)
+📁 **Recursos:** [Presentación inicial](01-introduction/README_introduction_es.md)
 
 ---
 
@@ -32,14 +34,14 @@ Breve presentación de SSH y *overview* de los casos prácticos que se demostrar
 **Técnicas demostradas:**
 
 - Remote Port Forwarding (`ssh -R`)
-- Gestión de túneles con systemd
 - Servidor web con netcat (crazy-bat)
 
 **Arquitectura:**
 
 ```text
 Internet → AWS EC2 (IP pública) ← SSH Tunnel ← Equipo Local (crazy-bat)
-          puerto 8080              reverse      puerto 8080
+          puerto 8080              reverse      puerto 8085
+      (puerto público EC2)                  (puerto servicio local)
 ```
 
 **Prueba empírica:** Detener el servicio local y ver cómo el sitio web público se cae.
@@ -48,27 +50,26 @@ Internet → AWS EC2 (IP pública) ← SSH Tunnel ← Equipo Local (crazy-bat)
 
 ---
 
-### [03. Caso 2: Salto de Bastiones + Acceso a Servicio Privado](03-proxyjump-forwarding/) (12 minutos)
+### [03. Caso 2: Saltos por distintos *hosts* para acceder a servicio privado](03-proxyjump-forwarding/) (12 minutos)
 
 #### ProxyJump + Port Forwarding Integrados
 
-**Concepto:** Acceder a un servicio web en servidor privado (sin IP pública) saltando por un bastión, todo en un solo comando.
+**Concepto:** Acceder a un servicio en servidor privado (sin IP pública).
 
 **Técnicas demostradas:**
 
 - ProxyJump (`ssh -J`)
 - Local Port Forwarding (`ssh -L`)
-- Configuración `~/.ssh/config` optimizada
 
 **Arquitectura:**
 
 ```text
-Equipo local → Bastion (IP pública) → Servidor Privado (nginx/crazy-bat)
+Equipo local → Bastion (IP pública) → Servidor BBDD Privado
          ssh -J                  solo IP privada
          ssh -L 8080:localhost:80
 ```
 
-**Resultado:** Acceder a `http://localhost:8080` en el navegador local y ver el servicio del servidor privado.
+**Resultado:** Acceder a una base de datos remota en locallhost.
 
 📁 **Recursos:** [Documentación completa del Caso 2](03-proxyjump-forwarding/)
 
@@ -89,7 +90,7 @@ Equipo local → Bastion (IP pública) → Servidor Privado (nginx/crazy-bat)
 **Arquitectura:**
 
 ```text
-Laptop (X11 client) ← SSH + X11 ← AWS EC2 (X11 server + app gráfica)
+Equipo local (X11 client) ← SSH + X11 ← AWS EC2 (X11 server + app gráfica)
 ventana local                     htop/xeyes/stress-ng
 ```
 
@@ -106,6 +107,8 @@ ventana local                     htop/xeyes/stress-ng
 - **Usuarios SSH enjaulados** (chroot + SFTP only)
 - **Algoritmos SSH legacy** para conectar a sistemas antiguos
 - **SOCKS Proxy dinámico** (`ssh -D`)
+- **Gestión de túneles con systemd**
+- **Autossh**
 - **Otras capacidades:** SCP, SFTP, rsync sobre SSH
 
 📁 **Recursos:** [Documentación adicional](99-docs/)
@@ -114,7 +117,7 @@ ventana local                     htop/xeyes/stress-ng
 
 ### 06. Q&A (1 minuto)
 
-Preguntas rápidas de la audiencia.
+Preguntas de la audiencia.
 
 ---
 
@@ -148,7 +151,7 @@ Al finalizar la ponencia, se comparte este repositorio completo con:
 
 - ✅ Código Terraform para cada caso
 - ✅ Scripts de configuración
-- ✅ Grabaciones [asciinema](https://asciinema.org) como backup
+- ✅ Grabaciones [asciinema](https://asciinema.org)
 - ✅ Documentación detallada en inglés y español
 - ✅ Casos adicionales no demostrados en vivo
 

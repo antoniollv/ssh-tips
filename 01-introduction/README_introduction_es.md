@@ -1,5 +1,27 @@
 # Introducción - SSH Tips & Tricks
 
+## Prerequisitos: Configuración AWS para GitHub Actions
+
+Configuración de la infraestructura AWS base.
+
+### En GitHub
+
+1. Crear `environment` `poc` en el repositorio GitHub con los siguientes secretos
+   - `AWS_ACCESS_KEY_ID`: Credenciales AWS para configuración inicial
+   - `AWS_SECRET_ACCESS_KEY`: Credenciales AWS para configuración inicial
+
+2. Ejecutar el workflow **Setup AWS Requirements** desde GitHub Actions
+   El workflow creará automáticamente:
+   - Bucket S3 para Terraform state
+   - Rol IAM con OIDC para GitHub Actions
+   - Crea y añade los secretos en AWS
+
+3. Añadir al `environment` `poc` el secreto `AWS_ROLE_ARN` que encontraremos en *AWS Secret Manager* , `TF_STATE_BUCKET`) al entorno `poc`
+
+4. Eliminar las credenciales temporales (los workflows usarán OIDC) (opcional)
+
+---
+
 ## ¿Qué es SSH más allá del acceso remoto?
 
 SSH (Secure Shell) es un protocolo de red criptográfico desarrollado en 1995 por Tatu Ylönen. La mayoría lo conocemos como la herramienta para conectarnos a servidores remotos:
@@ -8,7 +30,7 @@ SSH (Secure Shell) es un protocolo de red criptográfico desarrollado en 1995 po
 ssh user@servidor
 ```
 
-Pero SSH es **mucho más** que eso. Es una navaja suiza para la conectividad segura.
+Pero SSH es **mucho más** que eso. Es una herramienta muy versátil para la conectividad segura.
 
 ## Breve Historia
 
@@ -32,7 +54,7 @@ Ejecutar aplicaciones gráficas en el servidor pero verlas en tu pantalla local.
 
 ### 🦘 ProxyJump
 
-Saltar por múltiples bastiones para alcanzar servidores internos.
+Saltar por múltiples equipos para alcanzar servidores remotos.
 
 ### 🔐 Autenticación por Claves
 
@@ -48,25 +70,21 @@ En esta ponencia demostraremos **3 casos prácticos** que muestran el poder real
 
 Acceder a un servidor web que está en tu equipo local, desde internet, sin tener IP pública.
 
-Veremos como configurar *Systemd* para que mantenga el túnel levantado
-
 **Técnicas:**
 
 - Remote Port Forwarding (`ssh -R`)
-- Gestión con systemd
 - Crazy-bat (servidor web con netcat)
 
-### 2️⃣ Salto de Bastiones + Servicio Privado (12 min)
+### 2️⃣ Salto de Servidores + Servicio Privado (12 min)
 
 #### ProxyJump + Port Forwarding Integrados
 
-Saltar por un bastión Y acceder a un servicio web privado, todo en un solo comando.
+Saltar por un servidor Y acceder a un servicio privado
 
 **Técnicas:**
 
 - ProxyJump (`ssh -J`)
 - Local Port Forwarding (`ssh -L`)
-- Configuración `~/.ssh/config`
 
 ### 3️⃣ La Ventana Mágica (10 min)
 
@@ -80,7 +98,7 @@ Ver en tu pantalla local una aplicación gráfica corriendo en AWS. Ejecutar un 
 - Aplicaciones gráficas remotas
 - Monitorización visual
 
-## Por qué importa
+## A destacar
 
 Estos no son trucos exóticos. Son herramientas prácticas para:
 
@@ -88,23 +106,6 @@ Estos no son trucos exóticos. Son herramientas prácticas para:
 - **Desarrollo:** Testing con servicios remotos como si fueran locales
 - **Seguridad:** Minimizar superficie de ataque (menos puertos abiertos)
 - **Productividad:** Simplificar flujos de trabajo complejos
-
-## Metodología de las Demostraciones
-
-Cada caso incluirá:
-
-✅ **Explicación del concepto** (2 min)  
-✅ **Arquitectura visual** (1 min)  
-✅ **Demostración en vivo** (7-8 min)  
-✅ **Prueba empírica** (demostrar con hechos no con palabras)
-✅ **Aplicaciones prácticas** (1 min)
-
-Todos los recursos estarán disponibles en este repositorio:
-
-- Código Terraform para replicar la infraestructura
-- Scripts de configuración
-- Documentación detallada
-- Grabaciones *asciinema*
 
 ## ¿Listos?
 
