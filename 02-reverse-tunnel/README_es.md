@@ -11,24 +11,15 @@ Servidor web accesible desde internet que físicamente está en tu equipo local,
 ## 🔧 Técnicas SSH Demostradas
 
 - **Remote Port Forwarding** (`ssh -R`): Túnel inverso desde equipo local hacia servidor público
-- **Gestión de túneles con systemd**: Mantener el túnel activo y auto-recuperable
 - **Servidor web con netcat**: Uso del proyecto [crazy-bat](https://github.com/antoniollv/crazy-bat)
 
 ## 🏗️ Arquitectura
 
-```text
-Internet → AWS EC2 (IP pública) ← SSH Tunnel ← Equipo Local (crazy-bat)
-          puerto 8080              reverse      puerto 8085
-```
-
-### Componentes
-
 1. **Equipo Local**
    - Ejecuta crazy-bat (servidor web con netcat en puerto 8085)
    - Inicia túnel SSH inverso hacia EC2
-   - Gestión del túnel mediante systemd
 
-2. **AWS EC2 (Bastion)**
+2. **AWS EC2**
    - Instancia t2.micro con IP pública
    - Recibe conexión SSH desde equipo local
    - Expone puerto 8080 a internet
@@ -38,39 +29,42 @@ Internet → AWS EC2 (IP pública) ← SSH Tunnel ← Equipo Local (crazy-bat)
    - Accede a `http://<ec2-public-ip>:8080`
    - Ve el contenido servido desde el equipo local del presentador
 
-## 🎬 Grabación de la Demostración en Vivo
-
-Mira la demostración completa automatizada mostrando todas las transiciones de estado:
-
-[![asciicast](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq.svg)](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq)
-
-*Haz clic para ver la grabación interactiva. La demo muestra los estados Local/Remoto (KO/OK) antes y después de iniciar contenedores y túneles.*
-
-## 🚀 Demostración Paso a Paso
-
-### 1. Preparación (Pre-demostración)
-
-**En equipo local:**
-
-```bash
-# Clonar crazy-bat
-git clone https://github.com/antoniollv/crazy-bat.git
-cd crazy-bat
-
-# Iniciar el servidor
-./crazy-bat.sh
+```mermaid
+graph LR
+    A[👥 Internet] -->|HTTP :8080| B[☁️ AWS EC2<br/>IP Pública]
+    B -.->|SSH Reverse<br/>Tunnel| C[💻 Equipo Local<br/>crazy-bat :8085]
+    C -.->|Establece túnel<br/>-R 8080:localhost:8085| B
+    
+    style A fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style B fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style C fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
 ```
+
+## 🚀 Demostración
+
+### 1. Preparación en el equipo local
+
+Clonar el repositorio [crazy-bat](https://github.com/antoniollv/crazy-bat.git) e iniciar el servicio
+
+El  script .`/02-reverse-tunnel/setup-crazy-bat.sh` que realiza estos pasos
 
 **Verificar que funciona localmente:**
 
 ```bash
-curl http://localhost:8080
+curl http://localhost:8085
 ```
 
 ### 2. Desplegar Infraestructura AWS
 
+Via **GitHub Actions**
+
+```text
+Go to Actions → "02 - Reverse Tunnel Infrastructure" → Run workflow
+```
+
+O manualmente con **Terraform**
+
 ```bash
-# Ejecutar GitHub Actions workflow o manualmente con Terraform
 cd 02-reverse-tunnel/terraform
 terraform init
 terraform apply
@@ -82,35 +76,6 @@ terraform apply
 - Security Group (SSH puerto 22, HTTP puerto 8080)
 - Elastic IP (opcional para IP estática)
 
-### 3. Configurar Túnel SSH con Systemd
-
-**Crear archivo de servicio:** `/etc/systemd/system/reverse-tunnel.service`
-
-```ini
-[Unit]
-Description=SSH Reverse Tunnel to AWS EC2
-After=network.target
-
-[Service]
-Type=simple
-User=<tu-usuario>
-ExecStart=/usr/bin/ssh -N -R 8080:localhost:8085 -o ServerAliveInterval=60 -o ServerAliveCountMax=3 ec2-user@<ec2-public-ip> -i /path/to/ssh-key.pem
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-**Activar y arrancar el servicio:**
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable reverse-tunnel.service
-sudo systemctl start reverse-tunnel.service
-sudo systemctl status reverse-tunnel.service
-```
-
 ### 4. Presentación en Vivo
 
 **Mostrar a la audiencia:**
@@ -119,18 +84,7 @@ sudo systemctl status reverse-tunnel.service
 2. **Verificación local:** Mostrar que crazy-bat está corriendo en `localhost:8085`
 3. **Túnel activo:** `sudo systemctl status reverse-tunnel.service`
 
-**Prueba empírica:**
-
-```bash
-# Detener el servicio local
-sudo systemctl stop crazy-bat  # O detener el proceso manualmente
-
-# La audiencia verá que la web pública deja de responder
-# Reiniciar el servicio y la web vuelve a funcionar
-sudo systemctl start crazy-bat
-```
-
-### 5. Explicaciones Técnicas Durante la Demo
+### 5. Explicaciones Técnicas
 
 - **¿Cómo funciona `-R 8080:localhost:8085`?**
   - El servidor EC2 escucha en su puerto 8080
@@ -139,14 +93,19 @@ sudo systemctl start crazy-bat
 - **¿Por qué el flag `-N`?**
   - Evita la ejecución de comandos remotos
   - No abre shell interactiva
-  - El proceso solo mantiene el túnel (más limpio y seguro)
-  
-- **¿Por qué systemd?**
-  - Auto-recuperación si la conexión SSH se pierde
-  - Logging centralizado (`journalctl -u reverse-tunnel`)
-  - Gestión consistente como cualquier otro servicio del sistema
+  - El proceso solo mantiene el túnel (más limpio y seguro)  
 
-- **Alternativa avanzada:** Mencionar `autossh` para entornos de producción (documentado en `99-docs/README_autossh_es.md`)
+## 🎬 Grabación de la demostración
+
+![Demo](demos/case01-complete-demo.gif)
+
+**[▶️ Ver la demostración completa automatizada (5-7 min)](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq)**
+
+La grabación muestra todas las transiciones de estado:
+
+- ❌ **Servicio local**: No ejecutándose → ✅ Ejecutándose (contenedor crazy-bat)
+- ❌ **Acceso remoto**: No accesible → ✅ Accesible (túnel SSH inverso)
+- 🔄 Ciclo completo de configuración y limpieza
 
 ## 📦 Recursos Necesarios
 
@@ -162,58 +121,8 @@ sudo systemctl start crazy-bat
 
 - **crazy-bat:** [https://github.com/antoniollv/crazy-bat](https://github.com/antoniollv/crazy-bat)
 - **SSH client:** OpenSSH
-- **systemd:** Para gestión del túnel (incluido en Linux moderno)
-
-## 🎬 Grabación con Asciinema
-
-Crear grabación de respaldo para cada paso:
-
-```bash
-# Grabar configuración del túnel
-asciinema rec demo-reverse-tunnel-setup.cast
-
-# Grabar la demostración completa
-asciinema rec demo-reverse-tunnel-live.cast
-```
-
-## ⚠️ Troubleshooting
-
-### El túnel no se establece
-
-```bash
-# Verificar conectividad SSH básica
-ssh -i /path/to/key.pem ec2-user@<ec2-public-ip>
-
-# Probar túnel manualmente
-ssh -v -N -R 8080:localhost:8080 ec2-user@<ec2-public-ip> -i /path/to/key.pem
-```
-
-### La web no es accesible desde internet
-
-```bash
-# Verificar que EC2 está escuchando en 8080
-ssh ec2-user@<ec2-public-ip> 'sudo netstat -tlnp | grep :8080'
-
-# Revisar Security Group en la consola de AWS
-# Asegurar que GatewayPorts esté habilitado en sshd_config del EC2
-```
-
-### Servicio systemd falla
-
-```bash
-# Ver logs detallados
-sudo journalctl -u reverse-tunnel.service -f
-
-# Verificar permisos de la clave SSH
-chmod 600 /path/to/key.pem
-```
-
-## 🔗 Referencias
-
-- [Documentación de crazy-bat](https://github.com/antoniollv/crazy-bat)
-- [SSH Remote Port Forwarding](https://www.ssh.com/academy/ssh/tunneling/example)
-- [systemd Service Files](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
-- [Alternativa con autossh](../99-docs/README_autossh_es.md)
+- **netcat** [https://netcat.sourceforge.net/](https://netcat.sourceforge.net/)
+- **Docker** [https://www.docker.com/](https://www.docker.com/) (Opcional)
 
 ## 📝 Notas para el Presentador
 

@@ -2,42 +2,23 @@
 
 ## Prerequisitos: Configuración AWS para GitHub Actions
 
-Antes de comenzar, necesitas configurar la infraestructura AWS base.
+Configuración de la infraestructura AWS base.
 
-### Opción 1: Usando GitHub Actions (Recomendado)
+### En GitHub
 
-1. Configura el entorno `poc` en tu repositorio GitHub
-2. Añade estos secrets al entorno `poc`:
-   - `AWS_ACCESS_KEY_ID`: Credenciales AWS temporales para setup inicial
-   - `AWS_SECRET_ACCESS_KEY`: Credenciales AWS temporales para setup inicial
-3. Ejecuta el workflow **Setup AWS Requirements** desde GitHub Actions
-4. El workflow creará automáticamente:
+1. Crear `environment` `poc` en el repositorio GitHub con los siguientes secretos
+   - `AWS_ACCESS_KEY_ID`: Credenciales AWS para configuración inicial
+   - `AWS_SECRET_ACCESS_KEY`: Credenciales AWS para configuración inicial
+
+2. Ejecutar el workflow **Setup AWS Requirements** desde GitHub Actions
+   El workflow creará automáticamente:
    - Bucket S3 para Terraform state
    - Rol IAM con OIDC para GitHub Actions
-5. Añade los secrets generados (`AWS_ROLE_ARN`, `TF_STATE_BUCKET`) al entorno `poc`
-6. Elimina las credenciales temporales (los workflows usarán OIDC)
+   - Crea y añade los secretos en AWS
 
-### Opción 2: Configuración local con scripts
+3. Añadir al `environment` `poc` el secreto `AWS_ROLE_ARN` que encontraremos en *AWS Secret Manager* , `TF_STATE_BUCKET`) al entorno `poc`
 
-**Requisitos:** AWS CLI configurada con credenciales de administrador
-
-```bash
-cd 01-introduction
-cp env.local.template env.local
-# Editar env.local con tus valores:
-# - AWS_REGION=eu-west-1, TF_STATE_BUCKET
-# - GITHUB_ORG, GITHUB_REPO
-
-# Crear bucket S3
-chmod +x create-s3-backend.sh
-./create-s3-backend.sh
-
-# Crear rol IAM para GitHub Actions
-chmod +x create-github-iam-role.sh
-./create-github-iam-role.sh
-```
-
-Añade los secrets mostrados en la salida del script a tu repositorio GitHub.
+4. Eliminar las credenciales temporales (los workflows usarán OIDC) (opcional)
 
 ---
 
@@ -49,7 +30,7 @@ SSH (Secure Shell) es un protocolo de red criptográfico desarrollado en 1995 po
 ssh user@servidor
 ```
 
-Pero SSH es **mucho más** que eso. Es una navaja suiza para la conectividad segura.
+Pero SSH es **mucho más** que eso. Es una herramienta muy versátil para la conectividad segura.
 
 ## Breve Historia
 
@@ -89,25 +70,21 @@ En esta ponencia demostraremos **3 casos prácticos** que muestran el poder real
 
 Acceder a un servidor web que está en tu equipo local, desde internet, sin tener IP pública.
 
-Posibilidad de configurar *Systemd* para que mantenga el túnel levantado
-
 **Técnicas:**
 
 - Remote Port Forwarding (`ssh -R`)
-- Gestión con systemd
 - Crazy-bat (servidor web con netcat)
 
 ### 2️⃣ Salto de Servidores + Servicio Privado (12 min)
 
 #### ProxyJump + Port Forwarding Integrados
 
-Saltar por un servidor Y acceder a un servicio privado, todo en un solo comando.
+Saltar por un servidor Y acceder a un servicio privado
 
 **Técnicas:**
 
 - ProxyJump (`ssh -J`)
 - Local Port Forwarding (`ssh -L`)
-- Configuración `~/.ssh/config`
 
 ### 3️⃣ La Ventana Mágica (10 min)
 
@@ -121,7 +98,7 @@ Ver en tu pantalla local una aplicación gráfica corriendo en AWS. Ejecutar un 
 - Aplicaciones gráficas remotas
 - Monitorización visual
 
-## Por qué importa
+## A destacar
 
 Estos no son trucos exóticos. Son herramientas prácticas para:
 
@@ -129,23 +106,6 @@ Estos no son trucos exóticos. Son herramientas prácticas para:
 - **Desarrollo:** Testing con servicios remotos como si fueran locales
 - **Seguridad:** Minimizar superficie de ataque (menos puertos abiertos)
 - **Productividad:** Simplificar flujos de trabajo complejos
-
-## Metodología de las Demostraciones
-
-Cada caso incluirá:
-
-✅ **Explicación del concepto** (2 min)  
-✅ **Arquitectura visual** (1 min)  
-✅ **Demostración en vivo** (7-8 min)  
-✅ **Prueba empírica** (demostrar con hechos no con palabras)
-✅ **Aplicaciones prácticas** (1 min)
-
-Todos los recursos estarán disponibles en este repositorio:
-
-- Código Terraform para replicar la infraestructura
-- Scripts de configuración
-- Documentación detallada
-- Grabaciones *asciinema*
 
 ## ¿Listos?
 
