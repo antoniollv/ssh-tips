@@ -41,6 +41,7 @@ Breve presentación de SSH y *overview* de los casos prácticos que se demostrar
 ```text
 Internet → AWS EC2 (IP pública) ← SSH Tunnel ← Equipo Local (crazy-bat)
           puerto 8080              reverse      puerto 8085
+      (puerto público EC2)                  (puerto servicio local)
 ```
 
 **Prueba empírica:** Detener el servicio local y ver cómo el sitio web público se cae.
