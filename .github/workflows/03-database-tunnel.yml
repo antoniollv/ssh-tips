@@ -1,0 +1,221 @@
+name: Deploy Case 2 - Database SSH Tunnel Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'GitHub Environment to use'
+        required: true
+        default: 'poc'
+        type: choice
+        options:
+          - poc
+          - production
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
+      aws_region:
+        description: 'AWS Region'
+        required: true
+        default: 'eu-west-1'
+        type: choice
+        options:
+          - eu-west-1
+          - eu-central-1
+          - us-east-1
+          - us-west-2
+      ssh_public_key:
+        description: 'SSH public key for EC2 access (optional, uses default if empty)'
+        required: false
+        type: string
+
+env:
+  AWS_REGION: ${{ inputs.aws_region }}
+  TF_VERSION: 1.6.0
+  WORKING_DIR: 03-proxyjump-forwarding/terraform
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.action }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-DatabaseTunnel
+      
+      - name: Get configuration from AWS Secrets Manager
+        id: get-config
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id ssh-tips/github-actions-config \
+            --region ${{ env.AWS_REGION }} \
+            --query SecretString \
+            --output text)
+          
+          TF_BUCKET=$(echo $SECRET | jq -r '.TF_STATE_BUCKET')
+          ROLE_ARN=$(echo $SECRET | jq -r '.AWS_ROLE_ARN')
+          
+          echo "TF_STATE_BUCKET=$TF_BUCKET" >> $GITHUB_ENV
+          echo "AWS_ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+          
+          # Mask sensitive values
+          echo "::add-mask::$ROLE_ARN"
+          echo "✅ Configuration loaded from Secrets Manager"
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+      
+      - name: Terraform Init
+        id: init
+        run: |
+          terraform init \
+            -backend-config="bucket=$TF_STATE_BUCKET" \
+            -backend-config="key=ssh-tips/03-proxyjump-forwarding/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+      
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        id: plan
+        if: inputs.action == 'apply'
+        run: |
+          terraform plan -no-color -input=false \
+            -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}" \
+            -out=tfplan
+        continue-on-error: true
+      
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+      
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve -input=false tfplan
+      
+      - name: Delete Secrets Manager Secret (before destroy)
+        if: inputs.action == 'destroy'
+        run: |
+          # Get secret name from terraform state
+          SECRET_NAME=$(terraform output -raw secrets_manager_name 2>/dev/null || echo "ssh-tips/case02-database-credentials")
+          
+          echo "Deleting secret: $SECRET_NAME"
+          aws secretsmanager delete-secret \
+            --secret-id "$SECRET_NAME" \
+            --force-delete-without-recovery \
+            --region ${{ env.AWS_REGION }} || echo "Secret already deleted or not found"
+        continue-on-error: true
+      
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        run: |
+          terraform destroy -auto-approve -input=false \
+            -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}"
+      
+      - name: Get Outputs
+        if: inputs.action == 'apply'
+        id: outputs
+        run: |
+          SECRET_NAME=$(terraform output -raw secrets_manager_name)
+          echo "secrets_manager_name=$SECRET_NAME" >> $GITHUB_OUTPUT
+          echo "bastion_public_ip=$(terraform output -raw bastion_public_ip)" >> $GITHUB_OUTPUT
+          
+          # Retrieve credentials from Secrets Manager
+          SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id "$SECRET_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --query SecretString \
+            --output text)
+          
+          # Parse JSON and set outputs
+          echo "rds_address=$(echo $SECRET | jq -r '.rds_address')" >> $GITHUB_OUTPUT
+          echo "rds_endpoint=$(echo $SECRET | jq -r '.rds_endpoint')" >> $GITHUB_OUTPUT
+          echo "db_name=$(echo $SECRET | jq -r '.db_name')" >> $GITHUB_OUTPUT
+          echo "db_username=$(echo $SECRET | jq -r '.db_username')" >> $GITHUB_OUTPUT
+          echo "db_password=$(echo $SECRET | jq -r '.db_password')" >> $GITHUB_OUTPUT
+          
+          # Mask sensitive outputs
+          DB_PASSWORD=$(echo $SECRET | jq -r '.db_password')
+          echo "::add-mask::$DB_PASSWORD"
+      
+      - name: Display Connection Info
+        if: inputs.action == 'apply'
+        run: |
+          echo "### 🚀 Infrastructure Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Bastion Public IP:** ${{ steps.outputs.outputs.bastion_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "**RDS Endpoint:** ${{ steps.outputs.outputs.rds_endpoint }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 🔐 Credentials Storage:" >> $GITHUB_STEP_SUMMARY
+          echo "All credentials stored in AWS Secrets Manager:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.outputs.outputs.secrets_manager_name }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 📋 Retrieve All Credentials:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "aws secretsmanager get-secret-value \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --secret-id ${{ steps.outputs.outputs.secrets_manager_name }} \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --region ${{ env.AWS_REGION }} \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --query SecretString --output text | jq" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 🔒 SSH Tunnel Command:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "ssh -i ~/.ssh/id_rsa -L 3306:${{ steps.outputs.outputs.rds_address }}:3306 -N ec2-user@${{ steps.outputs.outputs.bastion_public_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 💾 MySQL Connection (via tunnel):" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "mysql -h 127.0.0.1 -P 3306 -u ${{ steps.outputs.outputs.db_username }} -p" >> $GITHUB_STEP_SUMMARY
+          echo "# Password available in Secrets Manager" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 🔧 DBeaver Connection Settings:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Host:** 127.0.0.1" >> $GITHUB_STEP_SUMMARY
+          echo "- **Port:** 3306" >> $GITHUB_STEP_SUMMARY
+          echo "- **Database:** ${{ steps.outputs.outputs.db_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Username:** ${{ steps.outputs.outputs.db_username }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Password:** *(retrieve from Secrets Manager)*" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Important:** Establish SSH tunnel first before connecting with DBeaver!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 📊 Sample Data Loaded:" >> $GITHUB_STEP_SUMMARY
+          echo "- **employees** table: 10 records" >> $GITHUB_STEP_SUMMARY
+          echo "- **products** table: 10 records" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 🔑 Quick Access (for demo):" >> $GITHUB_STEP_SUMMARY
+          echo "**Database Name:** ${{ steps.outputs.outputs.db_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Database Username:** ${{ steps.outputs.outputs.db_username }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Database Password:** ${{ steps.outputs.outputs.db_password }}" >> $GITHUB_STEP_SUMMARY
