@@ -131,6 +131,15 @@ xclock
 
 **Esperado**: Una ventana de reloj aparece en tu pantalla local.
 
+#### Editor de Texto (Demo de Sistema de Archivos)
+
+```bash
+# Editor de texto mostrando sistema de archivos REMOTO
+gedit
+```
+
+**Esperado**: El editor de texto se abre en tu pantalla local. Cuando haces clic en "Abrir", verás el **sistema de archivos remoto de EC2**, no tus archivos locales. Prueba a abrir `/etc/hosts` o `/home/ec2-user/welcome.txt`.
+
 #### Monitor del Sistema (Demo Principal)
 
 ```bash
@@ -181,6 +190,7 @@ La grabación muestra:
 - 🔒 **Conexión SSH con flag -X**: Estableciendo túnel X11
 - 👀 **Demo xeyes**: Prueba visual simple
 - ⏰ **Demo xclock**: Aplicación gráfica de reloj
+- 📝 **Demo gedit**: Editor de texto mostrando sistema de archivos remoto
 - 📊 **gnome-system-monitor**: GUI completa de monitorización del sistema
 - ✅ **Todas las ventanas aparecen localmente**: Mientras se ejecutan remotamente
 

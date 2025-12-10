@@ -72,6 +72,9 @@ resource "aws_instance" "x11_server" {
               # Install additional GUI applications for demo
               # xeyes and xclock come with xorg-x11-apps
               
+              # Install text editor (shows remote filesystem)
+              yum install -y gedit
+              
               # Install GNOME System Monitor (optional, for advanced demo)
               yum install -y gnome-system-monitor
               

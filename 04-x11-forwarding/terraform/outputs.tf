@@ -42,6 +42,9 @@ output "demo_commands" {
     # Clock application
     xclock
     
+    # Text editor (shows REMOTE filesystem)
+    gedit
+    
     # System monitor (advanced demo)
     gnome-system-monitor
     

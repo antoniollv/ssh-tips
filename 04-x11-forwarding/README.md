@@ -131,6 +131,15 @@ xclock
 
 **Expected**: A clock window appears on your local screen.
 
+#### Text Editor (Filesystem Demo)
+
+```bash
+# Text editor showing REMOTE filesystem
+gedit
+```
+
+**Expected**: Text editor opens on your local screen. When you click "Open", you'll see the **remote EC2 filesystem**, not your local files. Try opening `/etc/hosts` or `/home/ec2-user/welcome.txt`.
+
 #### System Monitor (Main Demo)
 
 ```bash
@@ -181,6 +190,7 @@ The recording shows:
 - 🔒 **SSH connection with -X flag**: Establishing X11 tunnel
 - 👀 **xeyes demo**: Simple visual test
 - ⏰ **xclock demo**: Graphical clock application
+- 📝 **gedit demo**: Text editor showing remote filesystem
 - 📊 **gnome-system-monitor**: Full system monitoring GUI
 - ✅ **All windows appear locally**: While running remotely
 

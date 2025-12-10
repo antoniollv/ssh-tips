@@ -117,8 +117,9 @@ case $choice in
         echo "  3. Verify DISPLAY variable is set"
         echo "  4. Test xeyes (simple GUI)"
         echo "  5. Test xclock (clock application)"
-        echo "  6. Show gnome-system-monitor command"
-        echo "  7. Exit and summarize"
+        echo "  6. Test gedit (shows remote filesystem)"
+        echo "  7. Show gnome-system-monitor command"
+        echo "  8. Exit and summarize"
         echo ""
         echo -e "${YELLOW}⚠ Note: GUI windows won't be captured in asciinema${NC}"
         echo "Only terminal output will be recorded."
@@ -239,7 +240,32 @@ sleep 2
 
 echo "════════════════════════════════════════════════════════════════════"
 echo ""
-echo "📊 Step 5: Advanced demo - System Monitor"
+echo "📝 Step 5: Text editor (shows remote filesystem)"
+echo ""
+sleep 2
+
+echo "ec2-user@x11-server:~$ gedit /home/ec2-user/welcome.txt &"
+gedit /home/ec2-user/welcome.txt &
+GEDIT_PID=\$!
+sleep 3
+echo ""
+echo "✅ gedit launched (PID: \$GEDIT_PID)"
+echo "   Text editor window appears on your local screen"
+echo "   File shown is from REMOTE EC2 instance"
+echo "   Try File → Open to see remote filesystem"
+echo ""
+sleep 5
+
+echo "ec2-user@x11-server:~$ kill \$GEDIT_PID"
+kill \$GEDIT_PID 2>/dev/null || true
+sleep 2
+echo "✅ gedit window closed"
+echo ""
+sleep 2
+
+echo "════════════════════════════════════════════════════════════════════"
+echo ""
+echo "📊 Step 6: Advanced demo - System Monitor"
 echo ""
 sleep 2
 
@@ -275,6 +301,7 @@ echo ""
 echo "Summary:"
 echo "  • X11 forwarding: ✅ WORKING"
 echo "  • Simple apps (xeyes, xclock): ✅ TESTED"
+echo "  • Editor (gedit): ✅ TESTED (remote filesystem)"
 echo "  • Advanced apps (gnome-system-monitor): 📋 AVAILABLE"
 echo ""
 echo "All GUI applications ran on EC2 but displayed locally!"
@@ -316,6 +343,7 @@ EOFSCRIPT
         echo "  echo \$DISPLAY"
         echo "  xeyes &"
         echo "  xclock &"
+        echo "  gedit /etc/hosts &"
         echo "  gnome-system-monitor"
         echo "  exit"
         echo ""
