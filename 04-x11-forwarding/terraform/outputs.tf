@@ -39,14 +39,8 @@ output "demo_commands" {
     # Simple test (eyes that follow your cursor)
     xeyes
     
-    # Clock application
-    xclock
-    
-    # Text editor (shows REMOTE filesystem)
-    gedit
-    
-    # System monitor (advanced demo)
-    gnome-system-monitor
+    # X11 terminal (run commands with graphical output)
+    xterm
     
     ═══════════════════════════════════════════════════════════════
     

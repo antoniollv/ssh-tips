@@ -122,25 +122,19 @@ xeyes
 
 **Esperado**: Una ventana con ojos aparece en tu pantalla local, siguiendo los movimientos del ratón.
 
-#### Aplicación de Reloj
+#### Terminal X11 (Demo Principal)
 
 ```bash
-# Reloj analógico
-xclock
+# Terminal X11 - ejecuta cualquier comando con salida gráfica
+xterm
+
+# Dentro de xterm, puedes:
+ls /etc
+cat /home/ec2-user/welcome.txt
+htop  # si está instalado
 ```
 
-**Esperado**: Una ventana de reloj aparece en tu pantalla local.
-
-#### Editor de Texto (Demo de Sistema de Archivos)
-
-```bash
-# Editor de texto mostrando sistema de archivos REMOTO
-gedit
-```
-
-**Esperado**: El editor de texto se abre en tu pantalla local. Cuando haces clic en "Abrir", verás el **sistema de archivos remoto de EC2**, no tus archivos locales. Prueba a abrir `/etc/hosts` o `/home/ec2-user/welcome.txt`.
-
-#### Monitor del Sistema (Demo Principal)
+**Esperado**: Ventana de terminal se abre en tu pantalla local. Los comandos se ejecutan en **EC2 remota**, mostrando sistema de archivos remoto. Puedes abrir múltiples ventanas xterm simultáneamente.
 
 ```bash
 # Monitor de Sistema GNOME
@@ -189,9 +183,7 @@ La grabación muestra:
 
 - 🔒 **Conexión SSH con flag -X**: Estableciendo túnel X11
 - 👀 **Demo xeyes**: Prueba visual simple
-- ⏰ **Demo xclock**: Aplicación gráfica de reloj
-- 📝 **Demo gedit**: Editor de texto mostrando sistema de archivos remoto
-- 📊 **gnome-system-monitor**: GUI completa de monitorización del sistema
+- 💻 **Demo xterm**: Terminal remota con interfaz gráfica
 - ✅ **Todas las ventanas aparecen localmente**: Mientras se ejecutan remotamente
 
 ## 📦 Recursos Necesarios

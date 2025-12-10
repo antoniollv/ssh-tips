@@ -66,17 +66,11 @@ resource "aws_instance" "x11_server" {
               # Update system
               yum update -y
               
-              # Install X11 libraries and applications
-              yum install -y xorg-x11-xauth xorg-x11-apps
+              # Install X11 authentication utilities
+              yum install -y xorg-x11-xauth
               
-              # Install additional GUI applications for demo
-              # xeyes and xclock come with xorg-x11-apps
-              
-              # Install text editor (shows remote filesystem)
-              yum install -y gedit
-              
-              # Install GNOME System Monitor (optional, for advanced demo)
-              yum install -y gnome-system-monitor
+              # Install lightweight X11 demo applications
+              yum install -y xeyes xterm
               
               # Configure SSH for X11 forwarding
               sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config

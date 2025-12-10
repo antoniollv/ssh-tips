@@ -122,25 +122,19 @@ xeyes
 
 **Expected**: A window with eyes appears on your local screen, following your mouse movements.
 
-#### Clock Application
-
-```bash
-# Analog clock
-xclock
-```
-
-**Expected**: A clock window appears on your local screen.
-
 #### Text Editor (Filesystem Demo)
 
 ```bash
-# Text editor showing REMOTE filesystem
-gedit
+# X11 terminal - run any command with graphical output
+xterm
+
+# Inside xterm, you can:
+ls /etc
+cat /home/ec2-user/welcome.txt
+htop  # if installed
 ```
 
-**Expected**: Text editor opens on your local screen. When you click "Open", you'll see the **remote EC2 filesystem**, not your local files. Try opening `/etc/hosts` or `/home/ec2-user/welcome.txt`.
-
-#### System Monitor (Main Demo)
+**Expected**: Terminal window opens on your local screen. Commands run on **remote EC2**, showing remote filesystem. You can open multiple xterm windows simultaneously.
 
 ```bash
 # GNOME System Monitor
@@ -189,9 +183,7 @@ The recording shows:
 
 - 🔒 **SSH connection with -X flag**: Establishing X11 tunnel
 - 👀 **xeyes demo**: Simple visual test
-- ⏰ **xclock demo**: Graphical clock application
-- 📝 **gedit demo**: Text editor showing remote filesystem
-- 📊 **gnome-system-monitor**: Full system monitoring GUI
+- 💻 **xterm demo**: Remote terminal with graphical interface
 - ✅ **All windows appear locally**: While running remotely
 
 ## 📦 Required Resources
