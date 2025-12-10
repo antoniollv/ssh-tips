@@ -75,40 +75,40 @@ resource "aws_instance" "bastion" {
 
   vpc_security_group_ids = [aws_security_group.bastion.id]
 
-  user_data = <<-EOF
-              #!/bin/bash
-              # Update system
-              yum update -y
-              
-              # Configure SSHD for reverse tunneling
-              cat >> /etc/ssh/sshd_config <<SSHD_CONFIG
-              
-              # SSH Reverse Tunnel Configuration
-              GatewayPorts yes
-              ClientAliveInterval 60
-              ClientAliveCountMax 3
-              SSHD_CONFIG
-              
-              # Restart SSH service
-              systemctl restart sshd
-              
-              # Install useful tools
-              yum install -y netcat htop
-              
-              # Create welcome message
-              cat > /etc/motd <<MOTD
-              =====================================
-              SSH Tips - Reverse Tunnel Bastion
-              =====================================
-              
-              This server is configured to accept
-              reverse SSH tunnels on port ${var.demo_port}.
-              
-              Demo URL: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):${var.demo_port}
-              
-              =====================================
-              MOTD
-              EOF
+  user_data = <<EOF
+#!/bin/bash
+# Update system
+yum update -y
+
+# Configure SSHD for reverse tunneling
+cat >> /etc/ssh/sshd_config <<SSHD_CONFIG
+
+# SSH Reverse Tunnel Configuration
+GatewayPorts yes
+ClientAliveInterval 60
+ClientAliveCountMax 3
+SSHD_CONFIG
+
+# Restart SSH service
+systemctl restart sshd
+
+# Install useful tools
+yum install -y netcat htop
+
+# Create welcome message
+cat > /etc/motd <<MOTD
+=====================================
+SSH Tips - Reverse Tunnel Bastion
+=====================================
+
+This server is configured to accept
+reverse SSH tunnels on port ${var.demo_port}.
+
+Demo URL: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):${var.demo_port}
+
+=====================================
+MOTD
+EOF
 
   tags = {
     Name = "${var.project_name}-bastion"

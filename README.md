@@ -11,7 +11,7 @@ Talk about some practical use cases of the SSH remote access protocol, beyond it
 
 ## 🎯 Presentation Structure
 
-### [01. Introduction](01-introduction/) (2 minutes)
+### [01. Introduction](01-introduction/README_introduction.md) (2 minutes)
 
 Brief presentation of SSH and overview of the practical cases to be demonstrated.
 
@@ -25,7 +25,7 @@ Brief presentation of SSH and overview of the practical cases to be demonstrated
 
 ---
 
-### [02. Case 1: The Server That Doesn't Exist](02-reverse-tunnel/) (12 minutes)
+### [02. Case 1: The Server That Doesn't Exist](02-reverse-tunnel/README.md) (12 minutes)
 
 #### Reverse SSH Tunnel with Crazy-Bat + Systemd
 
@@ -46,11 +46,11 @@ Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
 
 **Empirical test:** Stop the local service and watch how the public website goes down.
 
-📁 **Resources:** [Complete Case 1 documentation](02-reverse-tunnel/)
+📁 **Resources:** [Complete Case 1 documentation](02-reverse-tunnel/README.md)
 
 ---
 
-### [03. Case 2: Jumping Through Different Hosts to Access Private Service](03-proxyjump-forwarding/) (12 minutes)
+### [03. Case 2: Jumping Through Different Hosts to Access Private Service](03-proxyjump-forwarding/README.md) (12 minutes)
 
 #### Integrated ProxyJump + Port Forwarding
 
@@ -58,24 +58,22 @@ Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
 
 **Techniques demonstrated:**
 
-- ProxyJump (`ssh -J`)
 - Local Port Forwarding (`ssh -L`)
 
 **Architecture:**
 
 ```text
-Local Machine → Bastion (public IP) → Private Server (nginx/crazy-bat)
-          ssh -J                  private IP only
-          ssh -L 8080:localhost:80
+Local Machine → Bastion (public IP) → Private DDBB Server
+          ssh -L ssh -L 3306:<IP/DNS_NAME BBDD SERVER>:3306
 ```
 
 **Result:** Access a remote database on localhost.
 
-📁 **Resources:** [Complete Case 2 documentation](03-proxyjump-forwarding/)
+📁 **Resources:** [Complete Case 2 documentation](03-proxyjump-forwarding/README.md)
 
 ---
 
-### [04. Case 3: The Magic Window](04-x11-forwarding/) (10 minutes)
+### [04. Case 3: The Magic Window](04-x11-forwarding/README.md) (10 minutes)
 
 #### X11 Forwarding with Remote CPU Monitor
 
@@ -96,11 +94,11 @@ local window                          htop/xeyes/stress-ng
 
 **Empirical test:** Launch stress test on AWS and watch on your local screen how CPU jumps from 5% to 100%.
 
-📁 **Resources:** [Complete Case 3 documentation](04-x11-forwarding/)
+📁 **Resources:** [Complete Case 3 documentation](04-x11-forwarding/README.md)
 
 ---
 
-### [05. Closing and Additional Cases](05-closing/) (3 minutes)
+### [05. Closing and Additional Cases](05-closing/README.md) (3 minutes)
 
 **Quick mention of other useful cases:**
 
@@ -111,7 +109,7 @@ local window                          htop/xeyes/stress-ng
 - **Autossh**
 - **Other capabilities:** SCP, SFTP, rsync over SSH
 
-📁 **Resources:** [Additional documentation](99-docs/)
+📁 **Resources:** [Additional documentation](99-docs/README_tips.md)
 
 ---
 
