@@ -201,7 +201,9 @@ GROUP BY department;
 
 ## 🎬 Demonstration Recording
 
-**[▶️ Watch the complete automated demonstration (5-7 min)](asciinema-url-pending)**
+[![asciicast](https://asciinema.org/a/9wCUOTTsDSStF1muhBecx4GQC.svg)](https://asciinema.org/a/9wCUOTTsDSStF1muhBecx4GQC)
+
+**[▶️ Watch the complete automated demonstration](https://asciinema.org/a/9wCUOTTsDSStF1muhBecx4GQC)**
 
 The recording shows all state transitions:
 

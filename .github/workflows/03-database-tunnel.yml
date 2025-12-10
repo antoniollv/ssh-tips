@@ -128,7 +128,7 @@ jobs:
         if: inputs.action == 'apply'
         run: |
           echo "Waiting for EC2 user_data to complete (MySQL client installation)..."
-          sleep 90
+          sleep 15
       
       - name: Populate Database with Sample Data
         if: inputs.action == 'apply'
