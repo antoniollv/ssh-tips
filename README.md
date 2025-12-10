@@ -1,274 +1,192 @@
-# ssh-tips
-SSH tips &amp; tricks
+# SSH Tips & Tricks
 
-## Introduction
+## 📋 General Information
 
-SSH (Secure Shell) is a cryptographic network protocol that provides a secure channel over an unsecured network. It's primarily used for secure remote login to computer systems, but it can also be used for secure file transfers, port forwarding, and tunneling various network services.
+Talk about some practical use cases of the SSH remote access protocol, beyond its usual usage.
 
-This document provides practical tips and tricks for everyday SSH usage, covering essential configuration and common use cases. It is not intended to be a comprehensive protocol specification, but rather a quick reference for common tasks.
+**Duration:** 40 minutes  
+**Format:** Remote presentation via Teams  
+**Audience:** IT professionals with SSH knowledge  
+**Objective:** Showcase SSH capabilities through practical demonstrations
 
-## History
+## 🎯 Presentation Structure
 
-SSH was developed in 1995 by Tatu Ylönen in response to a password-sniffing attack at his university network. It was designed as a secure replacement for Telnet, rlogin, rsh, and rcp, which transmitted data in plaintext.
+### [01. Introduction](01-introduction/) (2 minutes)
 
-Key milestones:
-- **SSH-1** (1995): Original protocol with security vulnerabilities
-- **SSH-2** (2006): Current standard with improved security, became IETF standard (RFC 4251-4254)
-- **OpenSSH** (1999): The most widely used implementation, developed by the OpenBSD project
+Brief presentation of SSH and overview of the practical cases to be demonstrated.
 
-## Server Configuration
+**Topics to cover:**
 
-### Basic SSH Server Setup
+- What is SSH beyond remote access?
+- Advanced capabilities: tunneling, forwarding, X11
+- Introduction to the 3 practical cases
 
-**Installation (Debian/Ubuntu):**
-```bash
-sudo apt update
-sudo apt install openssh-server
+📁 **Resources:** [Initial presentation](01-introduction/README_introduction.md)
+
+---
+
+### [02. Case 1: The Server That Doesn't Exist](02-reverse-tunnel/) (12 minutes)
+
+#### Reverse SSH Tunnel with Crazy-Bat + Systemd
+
+**Concept:** Web server accessible from the internet that is physically on your local machine, without a public IP.
+
+**Techniques demonstrated:**
+
+- Remote Port Forwarding (`ssh -R`)
+- Web server with netcat (crazy-bat)
+
+**Architecture:**
+
+```text
+Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
+          port 8080             reverse      port 8085
+       (EC2 public port)                  (local service port)
 ```
 
-**Installation (RedHat/CentOS):**
-```bash
-sudo yum install openssh-server
-sudo systemctl enable sshd
-sudo systemctl start sshd
+**Empirical test:** Stop the local service and watch how the public website goes down.
+
+📁 **Resources:** [Complete Case 1 documentation](02-reverse-tunnel/)
+
+---
+
+### [03. Case 2: Jumping Through Different Hosts to Access Private Service](03-proxyjump-forwarding/) (12 minutes)
+
+#### Integrated ProxyJump + Port Forwarding
+
+**Concept:** Access a service on a private server (without public IP).
+
+**Techniques demonstrated:**
+
+- ProxyJump (`ssh -J`)
+- Local Port Forwarding (`ssh -L`)
+
+**Architecture:**
+
+```text
+Local Machine → Bastion (public IP) → Private Server (nginx/crazy-bat)
+          ssh -J                  private IP only
+          ssh -L 8080:localhost:80
 ```
 
-### Essential Server Configuration Tips
+**Result:** Access a remote database on localhost.
 
-The main configuration file is `/etc/ssh/sshd_config`. Here are key settings:
+📁 **Resources:** [Complete Case 2 documentation](03-proxyjump-forwarding/)
 
-**Disable root login:**
-```
-PermitRootLogin no
-```
+---
 
-**Change default port (security through obscurity):**
-```
-Port 2222
-```
+### [04. Case 3: The Magic Window](04-x11-forwarding/) (10 minutes)
 
-**Enable public key authentication:**
-```
-PubkeyAuthentication yes
-```
+#### X11 Forwarding with Remote CPU Monitor
 
-**Disable password authentication (after setting up keys):**
-```
-PasswordAuthentication no
-```
+**Concept:** Run a graphical application on AWS but see it on your local screen. Demonstrate in real-time how the remote server's CPU spikes.
 
-**Limit user access:**
-```
-AllowUsers user1 user2
+**Techniques demonstrated:**
+
+- X11 Forwarding (`ssh -X`)
+- Remote graphical application execution
+- Real-time visual monitoring
+
+**Architecture:**
+
+```text
+Local Machine (X11 client) ← SSH + X11 ← AWS EC2 (X11 server + GUI app)
+local window                          htop/xeyes/stress-ng
 ```
 
-**After changes, restart SSH service:**
-```bash
-sudo systemctl restart sshd
-```
+**Empirical test:** Launch stress test on AWS and watch on your local screen how CPU jumps from 5% to 100%.
 
-## Client Configuration
+📁 **Resources:** [Complete Case 3 documentation](04-x11-forwarding/)
 
-### SSH Client Tips and Tricks
+---
 
-**1. SSH Config File (`~/.ssh/config`)**
+### [05. Closing and Additional Cases](05-closing/) (3 minutes)
 
-Create shortcuts for frequently accessed servers:
-```
-Host myserver
-    HostName example.com
-    User username
-    Port 2222
-    IdentityFile ~/.ssh/id_rsa_custom
-```
+**Quick mention of other useful cases:**
 
-Now connect with just: `ssh myserver`
+- **Jailed SSH users** (chroot + SFTP only)
+- **Legacy SSH algorithms** for connecting to old systems
+- **Dynamic SOCKS Proxy** (`ssh -D`)
+- **Tunnel management with systemd**
+- **Autossh**
+- **Other capabilities:** SCP, SFTP, rsync over SSH
 
-**2. Generate SSH Keys**
+📁 **Resources:** [Additional documentation](99-docs/)
 
-```bash
-# Generate RSA key (4096 bits recommended)
-ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+---
 
-# Generate Ed25519 key (modern, recommended)
-ssh-keygen -t ed25519 -C "your_email@example.com"
-```
+### 06. Q&A (1 minute)
 
-**3. Copy Public Key to Server**
+Audience questions.
 
-```bash
-ssh-copy-id user@hostname
-# Or specify a key:
-ssh-copy-id -i ~/.ssh/id_rsa.pub user@hostname
-```
+---
 
-**4. SSH Agent (avoid typing password repeatedly)**
+## 🛠️ Technical Requirements
 
-```bash
-# Start agent
-eval "$(ssh-agent -s)"
+### AWS Infrastructure
 
-# Add key
-ssh-add ~/.ssh/id_rsa
-```
+All resources are automatically deployed with Terraform:
 
-**5. Port Forwarding**
+- **Case 1:** 1x EC2 t2.micro + Security Group + Elastic IP
+- **Case 2:** 2x EC2 t2.micro + VPC + 2 Subnets + Security Groups + Elastic IP
+- **Case 3:** 1x EC2 t2.small + Security Group + Elastic IP
 
-**Local port forwarding** (access remote service locally):
-```bash
-ssh -L 8080:localhost:80 user@remote-server
-```
-Now access remote server's port 80 via localhost:8080
+### Local
 
-**Remote port forwarding** (expose local service to remote):
-```bash
-ssh -R 9090:localhost:3000 user@remote-server
-```
+- Docker (for crazy-bat)
+- SSH client with X11 support
+- X11 server (native Linux, WSL2 + VcXsrv, or XQuartz on Mac)
+- Terraform
+- Configured AWS CLI
 
-**Dynamic port forwarding (SOCKS proxy):**
-```bash
-ssh -D 1080 user@remote-server
-```
+### GitHub Actions
 
-**6. Keep Connection Alive**
+Workflows for automatic deploy/destroy of AWS infrastructure.
 
-Add to `~/.ssh/config`:
-```
-Host *
-    ServerAliveInterval 60
-    ServerAliveCountMax 3
-```
+---
 
-**7. Jump Hosts (ProxyJump)**
+## 📚 Shared Resources
 
-Access a server through a bastion/jump host:
-```bash
-ssh -J jumphost targethost
-```
+At the end of the presentation, this complete repository is shared with:
 
-Or in config:
-```
-Host target
-    HostName target.internal
-    ProxyJump jumphost
-```
+- ✅ Terraform code for each case
+- ✅ Configuration scripts
+- ✅ [asciinema](https://asciinema.org) recordings
+- ✅ Detailed documentation in English and Spanish
+- ✅ Additional cases not demonstrated live
 
-**8. SCP and SFTP for File Transfer**
+---
 
-```bash
-# Copy file to remote
-scp local-file.txt user@remote:/path/to/destination/
+## 📝 Presenter Notes
 
-# Copy from remote
-scp user@remote:/path/to/file.txt ./local-directory/
+### Plan B
 
-# Copy directory recursively
-scp -r local-directory user@remote:/path/
+Each case has asciinema recordings as backup in case of technical failures.
 
-# SFTP interactive session
-sftp user@remote
-```
+### Timing
 
-**9. SSH Tunneling for Databases**
+- Keep pace: maximum 12 min per case
+- Reserve time for unexpected issues
+- Questions at the end, not during demos
 
-```bash
-# Access remote MySQL/PostgreSQL locally
-ssh -L 3306:localhost:3306 user@dbserver
-```
+### Key Messages
 
-**10. Execute Remote Commands**
+1. **SSH is much more than remote access:** tunneling, forwarding, X11
+2. **Real practical cases:** not exotic tricks, but useful tools
+3. **Automation:** systemd, Terraform, IaC
+4. **Available documentation:** everything in this repository for deeper learning
 
-```bash
-# Run single command
-ssh user@server "ls -la /var/log"
+---
 
-# Run multiple commands
-ssh user@server "cd /var/www && git pull && npm install"
-```
-
-## Current Usage
-
-SSH is ubiquitous in modern IT infrastructure:
-
-### DevOps & Cloud Computing
-- Remote server administration
-- Continuous Integration/Deployment pipelines
-- Container orchestration (Kubernetes, Docker)
-- Cloud instance management (AWS, Azure, GCP)
-
-### Development Workflows
-- Git repository access (GitHub, GitLab, Bitbucket)
-- Remote development environments
-- VS Code Remote-SSH extension
-- Remote debugging
-
-### Network Administration
-- Secure file transfers (SFTP, SCP)
-- Network device configuration (routers, switches)
-- Port forwarding and tunneling
-- VPN alternatives
-
-### Security Best Practices
-- Use SSH keys instead of passwords
-- Implement fail2ban or similar for brute-force protection
-- Regular key rotation
-- Use strong key algorithms (Ed25519, RSA 4096-bit)
-- Multi-factor authentication (Google Authenticator, Duo)
-
-## Future Prospects
-
-SSH continues to evolve with modern security requirements:
-
-### Emerging Trends
-
-**Post-Quantum Cryptography**
-- Research into quantum-resistant algorithms
-- Preparation for quantum computing threats
-- Hybrid approaches combining current and post-quantum algorithms
-
-**Zero Trust Security**
-- Certificate-based authentication
-- Short-lived credentials
-- Context-aware access control
-
-**Cloud-Native Integration**
-- Better integration with cloud identity providers
-- Ephemeral SSH access
-- Session recording and audit trails
-
-### Modern Alternatives and Complements
-
-**Mosh (Mobile Shell)**
-- Better performance over high-latency connections
-- Automatic reconnection
-- Local echo for better responsiveness
-
-**Tailscale/WireGuard**
-- Modern VPN alternatives
-- Zero-configuration mesh networks
-- Complements SSH for secure access
-
-**SSH Certificates**
-- Centralized key management
-- Automatic expiration
-- Role-based access control
-
-### Standardization Efforts
-
-- Ongoing IETF work on protocol improvements
-- Enhanced security algorithms
-- Better support for modern authentication methods
-
-## Useful Resources
+## 🔗 Useful Links
 
 - [OpenSSH Official Documentation](https://www.openssh.com/)
-- [SSH Protocol RFCs](https://www.ietf.org/rfc/rfc4251.txt)
-- [SSH Academy](https://www.ssh.com/academy/ssh)
+- [Crazy-Bat Project](https://github.com/antoniollv/crazy-bat)
+- [asciinema](https://asciinema.org/)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 
-## Contributing
+---
 
-Feel free to submit issues or pull requests with additional tips and tricks!
+## 📄 License
 
-## License
-
-This project is licensed under CC0 1.0 Universal - see the LICENSE file for details.
+This project is licensed under CC0 1.0 Universal - see [LICENSE](LICENSE) file for details.

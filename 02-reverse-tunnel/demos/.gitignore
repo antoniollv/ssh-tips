@@ -1,0 +1,5 @@
+# Keep .cast files (they're small text files)
+!*.cast
+
+# Temporary files
+*.tmp

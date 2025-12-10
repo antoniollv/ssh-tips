@@ -1,0 +1,17 @@
+# Environment files with credentials
+env.local
+
+# Terraform files
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfplan
+terraform/.terraform.tfstate.lock.info
+
+# SSH keys
+*.pem
+*.key
+
+# Asciinema recordings (optional - comment if you want to commit them)
+# demos/*.cast
