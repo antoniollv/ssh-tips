@@ -108,8 +108,6 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: inputs.action == 'apply'
-        env:
-          TF_VAR_ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           terraform plan -no-color -input=false \
             -var="ssh_public_key=${{ inputs.ssh_public_key }}" \
@@ -122,9 +120,87 @@ jobs:
       
       - name: Terraform Apply
         if: inputs.action == 'apply'
-        env:
-          TF_VAR_ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
         run: terraform apply -auto-approve -input=false tfplan
+      
+      - name: Wait for user_data completion
+        if: inputs.action == 'apply'
+        run: |
+          echo "Waiting for EC2 user_data to complete (MySQL client installation)..."
+          sleep 90
+      
+      - name: Populate Database with Sample Data
+        if: inputs.action == 'apply'
+        run: |
+          # Get credentials from Secrets Manager
+          SECRET_JSON=$(aws secretsmanager get-secret-value \
+            --secret-id ssh-tips/case02-database-credentials \
+            --region ${{ env.AWS_REGION }} \
+            --query SecretString --output text)
+          
+          DB_HOST=$(echo $SECRET_JSON | jq -r '.rds_endpoint' | cut -d: -f1)
+          DB_NAME=$(echo $SECRET_JSON | jq -r '.db_name')
+          DB_USER=$(echo $SECRET_JSON | jq -r '.db_username')
+          DB_PASS=$(echo $SECRET_JSON | jq -r '.db_password')
+          BASTION_IP=$(terraform output -raw bastion_public_ip)
+          
+          # Create SQL file
+          cat > /tmp/populate_db.sql << 'EOSQL'
+          CREATE TABLE IF NOT EXISTS employees (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            department VARCHAR(50) NOT NULL,
+            salary DECIMAL(10, 2) NOT NULL,
+            hire_date DATE NOT NULL
+          );
+          
+          CREATE TABLE IF NOT EXISTS products (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            category VARCHAR(50) NOT NULL,
+            price DECIMAL(10, 2) NOT NULL,
+            stock INT NOT NULL
+          );
+          
+          INSERT INTO employees (name, department, salary, hire_date) VALUES
+          ('Alice Johnson', 'Engineering', 95000.00, '2020-01-15'),
+          ('Bob Smith', 'Engineering', 85000.00, '2019-03-22'),
+          ('Carol Williams', 'Marketing', 75000.00, '2021-06-10'),
+          ('David Brown', 'Sales', 70000.00, '2018-11-05'),
+          ('Eve Davis', 'Engineering', 105000.00, '2017-09-12'),
+          ('Frank Miller', 'HR', 65000.00, '2020-02-28'),
+          ('Grace Wilson', 'Engineering', 92000.00, '2019-07-19'),
+          ('Henry Moore', 'Marketing', 78000.00, '2021-01-08'),
+          ('Iris Taylor', 'Sales', 72000.00, '2020-05-14'),
+          ('Jack Anderson', 'Engineering', 88000.00, '2018-12-03');
+          
+          INSERT INTO products (name, category, price, stock) VALUES
+          ('Laptop Pro 15', 'Electronics', 1299.99, 45),
+          ('Wireless Mouse', 'Electronics', 29.99, 150),
+          ('USB-C Cable', 'Accessories', 12.99, 300),
+          ('Mechanical Keyboard', 'Electronics', 89.99, 75),
+          ('Monitor 27 inch', 'Electronics', 349.99, 30),
+          ('Desk Lamp', 'Office', 39.99, 120),
+          ('Office Chair', 'Office', 199.99, 25),
+          ('Notebook A4', 'Stationery', 4.99, 500),
+          ('Pen Set', 'Stationery', 9.99, 200),
+          ('External SSD 1TB', 'Electronics', 129.99, 60);
+          EOSQL
+          
+          # Setup SSH key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          
+          # Copy SQL file to bastion
+          scp -i /tmp/ssh_key.pem -o StrictHostKeyChecking=no /tmp/populate_db.sql ec2-user@${BASTION_IP}:/tmp/
+          
+          # Execute SQL on bastion (which connects to RDS)
+          ssh -i /tmp/ssh_key.pem -o StrictHostKeyChecking=no ec2-user@${BASTION_IP} \
+            "mysql -h ${DB_HOST} -u ${DB_USER} -p'${DB_PASS}' ${DB_NAME} < /tmp/populate_db.sql && rm /tmp/populate_db.sql"
+          
+          # Cleanup local files
+          rm /tmp/ssh_key.pem /tmp/populate_db.sql
+          
+          echo "✅ Database populated successfully!"
       
       - name: Delete Secrets Manager Secret (before destroy)
         if: inputs.action == 'destroy'
@@ -141,8 +217,6 @@ jobs:
       
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
-        env:
-          TF_VAR_ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           terraform destroy -auto-approve -input=false \
             -var="ssh_public_key=${{ inputs.ssh_public_key }}"
