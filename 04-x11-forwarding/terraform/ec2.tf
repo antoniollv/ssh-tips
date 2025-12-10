@@ -69,6 +69,8 @@ dnf update -y
 # Install X11 authentication utilities
 dnf install -y xorg-x11-xauth xeyes xterm
 
+# Install stress tool for CPU load testing stress
+
 # Configure SSH for X11 forwarding
 sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 sed -i 's/#X11DisplayOffset 10/X11DisplayOffset 10/' /etc/ssh/sshd_config
@@ -88,20 +90,11 @@ chown ec2-user:ec2-user /home/ec2-user/welcome.txt
 # Create CPU load generator script for demo
 cat > /home/ec2-user/cpu-load.sh << 'SCRIPT'
 #!/bin/bash
-# CPU Load Generator for X11 Demo
+# CPU Load Generator for X11 Demo using stress
 echo "Starting CPU load generation on all cores..."
-CORES=$(nproc)
-cpu_load() {
-    while true; do
-        echo "scale=5000; a(1)*4" | bc -l > /dev/null 2>&1
-    done
-}
-for i in $(seq 1 $CORES); do
-    cpu_load &
-done
-echo "CPU load started. Run 'top' in xterm to see the load."
-echo "To stop: killall cpu-load.sh"
-wait
+echo "Generating 100% CPU load for 60 seconds..."
+stress --cpu 1 --timeout 60s
+echo "CPU load finished. You can run this script again if needed."
 SCRIPT
 
 chmod +x /home/ec2-user/cpu-load.sh
