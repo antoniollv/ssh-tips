@@ -111,6 +111,7 @@ jobs:
         run: |
           terraform plan -no-color -input=false \
             -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}" \
+            -var="ssh_private_key=${{ secrets.SSH_PRIVATE_KEY }}" \
             -out=tfplan
         continue-on-error: true
       
@@ -139,7 +140,8 @@ jobs:
         if: inputs.action == 'destroy'
         run: |
           terraform destroy -auto-approve -input=false \
-            -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}"
+            -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}" \
+            -var="ssh_private_key=${{ secrets.SSH_PRIVATE_KEY }}"
       
       - name: Get Outputs
         if: inputs.action == 'apply'

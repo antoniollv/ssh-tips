@@ -64,6 +64,13 @@ variable "ssh_public_key" {
   default     = ""
 }
 
+variable "ssh_private_key" {
+  description = "SSH private key for connecting to bastion (required for DB population)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "allowed_ssh_cidr" {
   description = "CIDR block allowed to SSH to bastion (your IP)"
   type        = string
