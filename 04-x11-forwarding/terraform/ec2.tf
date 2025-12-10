@@ -69,7 +69,8 @@ dnf update -y
 # Install X11 authentication utilities
 dnf install -y xorg-x11-xauth xeyes xterm
 
-# Install stress tool for CPU load testing stress
+# Install stress tool for CPU load testing
+dnf install -y stress
 
 # Configure SSH for X11 forwarding
 sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
