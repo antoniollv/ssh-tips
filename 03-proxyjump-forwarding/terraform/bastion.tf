@@ -35,7 +35,7 @@ resource "aws_instance" "bastion" {
   user_data = <<-EOF
               #!/bin/bash
               yum update -y
-              yum install -y mysql
+              dnf install -y mariadb105
               
               # Enable TCP keepalive for SSH
               echo "ClientAliveInterval 60" >> /etc/ssh/sshd_config
