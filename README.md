@@ -58,15 +58,13 @@ Internet → AWS EC2 (public IP) ← SSH Tunnel ← Local Machine (crazy-bat)
 
 **Techniques demonstrated:**
 
-- ProxyJump (`ssh -J`)
 - Local Port Forwarding (`ssh -L`)
 
 **Architecture:**
 
 ```text
-Local Machine → Bastion (public IP) → Private Server (nginx/crazy-bat)
-          ssh -J                  private IP only
-          ssh -L 8080:localhost:80
+Local Machine → Bastion (public IP) → Private DDBB Server
+          ssh -L ssh -L 3306:<IP/DNS_NAME BBDD SERVER>:3306
 ```
 
 **Result:** Access a remote database on localhost.

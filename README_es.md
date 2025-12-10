@@ -58,15 +58,14 @@ Internet → AWS EC2 (IP pública) ← SSH Tunnel ← Equipo Local (crazy-bat)
 
 **Técnicas demostradas:**
 
-- ProxyJump (`ssh -J`)
 - Local Port Forwarding (`ssh -L`)
 
 **Arquitectura:**
 
 ```text
 Equipo local → Bastion (IP pública) → Servidor BBDD Privado
-         ssh -J                  solo IP privada
-         ssh -L 8080:localhost:80
+         
+         ssh -L 3306:<IP/DNS_NAME BBDD SERVER>:3306
 ```
 
 **Resultado:** Acceder a una base de datos remota en locallhost.
