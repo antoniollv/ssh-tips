@@ -19,17 +19,10 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# Generate temporary SSH key if not provided
-resource "tls_private_key" "temp_key" {
-  count     = var.ssh_public_key == "" ? 1 : 0
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
 # SSH Key Pair
 resource "aws_key_pair" "bastion" {
   key_name   = "${var.project_name}-key"
-  public_key = var.ssh_public_key != "" ? var.ssh_public_key : tls_private_key.temp_key[0].public_key_openssh
+  public_key = var.ssh_public_key
 
   tags = {
     Name = "${var.project_name}-key"

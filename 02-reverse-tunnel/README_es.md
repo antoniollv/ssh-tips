@@ -102,9 +102,7 @@ terraform apply
 
 ## 🎬 Grabación de la demostración
 
-![Demo](demos/case01-complete-demo.gif)
-
-**[▶️ Ver la demostración completa automatizada (5-7 min)](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq)**
+[![asciicast](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq.svg)](https://asciinema.org/a/9erIgP1kRfFykP1whloRglkQq)
 
 La grabación muestra todas las transiciones de estado:
 
