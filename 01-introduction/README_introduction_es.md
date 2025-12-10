@@ -111,7 +111,7 @@ Estos no son trucos exóticos. Son herramientas prácticas para:
 
 Comencemos con el primer caso: **El Servidor que No Existe**
 
-👉 **[Continuar al Caso 1: Túnel SSH Inverso](../02-reverse-tunnel/)**
+👉 **[Continuar al Caso 1: Túnel SSH Inverso](../02-reverse-tunnel/README_es.md)**
 
 ---
 
