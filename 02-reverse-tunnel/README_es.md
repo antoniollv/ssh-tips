@@ -16,6 +16,7 @@ Servidor web accesible desde internet que físicamente está en tu equipo local,
 ## 🏗️ Arquitectura
 
 **Configuración de Puertos:**
+
 - **Puerto Equipo Local:** 8085 (donde se ejecuta el servidor web crazy-bat)
 - **Puerto Público EC2:** 8080 (expuesto a internet)
 - **Mapeo del Túnel SSH:** EC2:8080 → localhost:8085

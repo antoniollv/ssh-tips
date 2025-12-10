@@ -173,19 +173,6 @@ sequenceDiagram
     Note over Local: Usuario ve e<br/>interactúa con ventana
 ```
 
-## 🎬 Grabación de la demostración
-
-[![asciicast](https://asciinema.org/a/PLACEHOLDER.svg)](https://asciinema.org/a/PLACEHOLDER)
-
-**[▶️ Ver la demostración completa automatizada](https://asciinema.org/a/PLACEHOLDER)**
-
-La grabación muestra:
-
-- 🔒 **Conexión SSH con flag -X**: Estableciendo túnel X11
-- 👀 **Demo xeyes**: Prueba visual simple
-- 💻 **Demo xterm**: Terminal remota con interfaz gráfica
-- ✅ **Todas las ventanas aparecen localmente**: Mientras se ejecutan remotamente
-
 ## 📦 Recursos Necesarios
 
 **AWS:**
@@ -197,7 +184,6 @@ La grabación muestra:
 - 1× IP Elástica
 - 1× Security Group (SSH:22)
 
-**Coste estimado:** ~$0.012/hora (~$0.10 para día de demo de 8 horas)
 
 ## 🔒 Consideraciones de Seguridad
 
@@ -267,12 +253,3 @@ Después de esta demostración, los asistentes entenderán:
 - [XQuartz para macOS](https://www.xquartz.org/)
 - [VcXsrv para Windows](https://sourceforge.net/projects/vcxsrv/)
 - [MobaXterm](https://mobaxterm.mobatek.net/)
-
-## 🔗 Casos Relacionados
-
-- **[Caso 1: Túnel SSH Inverso](../02-reverse-tunnel/README_es.md)** - Remote port forwarding
-- **[Caso 2: Túnel SSH a Base de Datos](../03-proxyjump-forwarding/README_es.md)** - Local port forwarding
-
----
-
-**Siguiente:** [Caso 4: Técnicas SSH Avanzadas](../05-advanced-techniques/README_es.md) *(próximamente)*

@@ -178,14 +178,8 @@ jobs:
           echo "# Simple test (eyes that follow your cursor)" >> $GITHUB_STEP_SUMMARY
           echo "xeyes" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Clock application" >> $GITHUB_STEP_SUMMARY
-          echo "xclock" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Text editor (shows REMOTE filesystem)" >> $GITHUB_STEP_SUMMARY
-          echo "gedit" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# System monitor (advanced demo)" >> $GITHUB_STEP_SUMMARY
-          echo "gnome-system-monitor" >> $GITHUB_STEP_SUMMARY
+          echo "# X11 terminal (run commands on remote EC2)" >> $GITHUB_STEP_SUMMARY
+          echo "xterm" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### 💻 Prerequisites (Local Machine):" >> $GITHUB_STEP_SUMMARY
