@@ -158,6 +158,21 @@ POLICY_DOCUMENT=$(cat <<EOF
       "Resource": "*"
     },
     {
+      "Sid": "IAMServiceLinkedRoleAccess",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateServiceLinkedRole",
+        "iam:DeleteServiceLinkedRole",
+        "iam:GetServiceLinkedRoleDeletionStatus"
+      ],
+      "Resource": "arn:aws:iam::*:role/aws-service-role/rds.amazonaws.com/*",
+      "Condition": {
+        "StringLike": {
+          "iam:AWSServiceName": "rds.amazonaws.com"
+        }
+      }
+    },
+    {
       "Sid": "SecretsManagerAccess",
       "Effect": "Allow",
       "Action": [
@@ -167,6 +182,7 @@ POLICY_DOCUMENT=$(cat <<EOF
         "secretsmanager:UpdateSecret",
         "secretsmanager:PutSecretValue",
         "secretsmanager:DeleteSecret",
+        "secretsmanager:GetResourcePolicy",
         "secretsmanager:TagResource"
       ],
       "Resource": "arn:aws:secretsmanager:*:*:secret:ssh-tips/*"
