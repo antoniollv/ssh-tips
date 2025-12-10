@@ -204,7 +204,7 @@ jobs:
           echo "#### ✅ Expected Result:" >> $GITHUB_STEP_SUMMARY
           echo "- GUI windows appear on your **LOCAL** screen" >> $GITHUB_STEP_SUMMARY
           echo "- Applications run on **REMOTE** EC2 instance" >> $GITHUB_STEP_SUMMARY
-          echo "- gedit shows remote filesystem (not local files)" >> $GITHUB_STEP_SUMMARY
+          echo "- xterm shows remote filesystem (not local files)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

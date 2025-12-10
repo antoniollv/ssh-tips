@@ -93,10 +93,7 @@ Various SSH productivity tips and security best practices.
 **Topics include:**
 - SSH config file optimization
 - Key management best practices
-- Port knocking
-- SSH agent forwarding
 - Connection multiplexing
-- ControlMaster for faster connections
 
 For complete tips collection, see: [99-docs/README_tips.md](../99-docs/README_tips.md)
 
@@ -128,16 +125,8 @@ All detailed guides available in the [99-docs](../99-docs/) directory:
 
 Each document is available in English and Spanish (\_es.md versions).
 
-## Next Steps
-
-1. Review the documentation in `99-docs/` for production implementation
-2. Test AutoSSH for reliable tunnel management
-3. Implement systemd services for critical tunnels
-4. Configure jailed users for enhanced security
-5. Optimize SSH config files for daily workflows
-
 ---
 
 **Workshop Complete!** 🎉
 
-You now have practical experience with SSH tunneling techniques and access to comprehensive documentation for production deployments.
+You now have practical experience with SSH tunneling techniques.

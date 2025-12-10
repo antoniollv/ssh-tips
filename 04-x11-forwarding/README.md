@@ -54,7 +54,7 @@ The workflow will:
 - ✅ Create VPC with public subnet
 - ✅ Deploy EC2 instance with X11 packages
 - ✅ Configure SSH for X11 forwarding
-- ✅ Install demo applications (xeyes, xclock, gnome-system-monitor)
+- ✅ Install demo applications (xeyes, xterm)
 - ✅ Display connection instructions
 
 ### 2. Setup Local X11 Server
@@ -122,7 +122,7 @@ xeyes
 
 **Expected**: A window with eyes appears on your local screen, following your mouse movements.
 
-#### Text Editor (Filesystem Demo)
+#### X11 Terminal (Main Demo)
 
 ```bash
 # X11 terminal - run any command with graphical output
@@ -131,22 +131,10 @@ xterm
 # Inside xterm, you can:
 ls /etc
 cat /home/ec2-user/welcome.txt
-htop  # if installed
+top  # monitor system resources
 ```
 
 **Expected**: Terminal window opens on your local screen. Commands run on **remote EC2**, showing remote filesystem. You can open multiple xterm windows simultaneously.
-
-```bash
-# GNOME System Monitor
-gnome-system-monitor
-```
-
-**Expected**: Full system monitor application showing:
-
-- CPU usage graphs
-- Memory consumption
-- Process list
-- Network activity
 
 **All running on EC2, displayed on your screen!**
 
@@ -164,7 +152,7 @@ sequenceDiagram
     EC2->>SSH: Set DISPLAY=localhost:10.0
     SSH->>Local: Forward X11 traffic
     
-    Note over EC2,App: User runs: gnome-system-monitor
+    Note over EC2,App: User runs: xterm
     App->>EC2: Create window
     EC2->>SSH: X11 commands
     SSH->>Local: Encrypted X11 data
@@ -275,4 +263,4 @@ After this demonstration, attendees will understand:
 
 ---
 
-**Next:** [Case 4: Advanced SSH Techniques](../05-advanced-techniques/README.md) *(coming soon)*
+**Next:** [Closing and Additional SSH Topics](../05-closing/README.md)

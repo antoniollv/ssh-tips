@@ -54,7 +54,7 @@ El workflow:
 - ✅ Crea VPC con subnet pública
 - ✅ Despliega instancia EC2 con paquetes X11
 - ✅ Configura SSH para X11 forwarding
-- ✅ Instala aplicaciones de demostración (xeyes, xclock, gnome-system-monitor)
+- ✅ Instala aplicaciones de demostración (xeyes, xterm)
 - ✅ Muestra instrucciones de conexión
 
 ### 2. Configurar Servidor X11 Local
@@ -136,18 +136,6 @@ htop  # si está instalado
 
 **Esperado**: Ventana de terminal se abre en tu pantalla local. Los comandos se ejecutan en **EC2 remota**, mostrando sistema de archivos remoto. Puedes abrir múltiples ventanas xterm simultáneamente.
 
-```bash
-# Monitor de Sistema GNOME
-gnome-system-monitor
-```
-
-**Esperado**: Aplicación completa de monitor del sistema mostrando:
-
-- Gráficos de uso de CPU
-- Consumo de memoria
-- Lista de procesos
-- Actividad de red
-
 **¡Todo ejecutándose en EC2, mostrado en tu pantalla!**
 
 ### 5. Cómo Funciona
@@ -164,7 +152,7 @@ sequenceDiagram
     EC2->>SSH: Configurar DISPLAY=localhost:10.0
     SSH->>Local: Reenviar tráfico X11
     
-    Note over EC2,App: Usuario ejecuta: gnome-system-monitor
+    Note over EC2,App: Usuario ejecuta: xterm
     App->>EC2: Crear ventana
     EC2->>SSH: Comandos X11
     SSH->>Local: Datos X11 cifrados

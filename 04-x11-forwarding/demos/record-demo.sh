@@ -115,11 +115,10 @@ case $choice in
         echo "  1. Show X11 connection instructions"
         echo "  2. Connect to EC2 with X11 forwarding"
         echo "  3. Verify DISPLAY variable is set"
-        echo "  4. Test xeyes (simple GUI)"
-        echo "  5. Test xclock (clock application)"
-        echo "  6. Test gedit (shows remote filesystem)"
-        echo "  7. Show gnome-system-monitor command"
-        echo "  8. Exit and summarize"
+        echo "  4. Test xeyes (simple GUI test)"
+        echo "  5. Test xterm (X11 terminal)"
+        echo "  6. Show CPU load demo"
+        echo "  7. Exit and summarize"
         echo ""
         echo -e "${YELLOW}⚠ Note: GUI windows won't be captured in asciinema${NC}"
         echo "Only terminal output will be recorded."
@@ -217,67 +216,48 @@ sleep 2
 
 echo "════════════════════════════════════════════════════════════════════"
 echo ""
-echo "⏰ Step 4: Test with xclock (clock application)"
+echo "💻 Step 4: Test with xterm (X11 terminal)"
 echo ""
 sleep 2
 
-echo "ec2-user@x11-server:~$ xclock &"
-xclock &
-XCLOCK_PID=\$!
+echo "ec2-user@x11-server:~$ xterm &"
+xterm &
+XTERM_PID=\$!
 sleep 3
 echo ""
-echo "✅ xclock launched (PID: \$XCLOCK_PID)"
-echo "   An analog clock should appear on your local screen"
+echo "✅ xterm launched (PID: \$XTERM_PID)"
+echo "   An X11 terminal window should appear on your local screen"
+echo "   Commands run on REMOTE EC2, displayed locally"
+echo "   Try: ls /etc, cat /home/ec2-user/welcome.txt, top"
 echo ""
-sleep 5
+sleep 8
 
-echo "ec2-user@x11-server:~$ kill \$XCLOCK_PID"
-kill \$XCLOCK_PID 2>/dev/null || true
+echo "ec2-user@x11-server:~$ kill \$XTERM_PID"
+kill \$XTERM_PID 2>/dev/null || true
 sleep 2
-echo "✅ xclock window closed"
+echo "✅ xterm window closed"
 echo ""
 sleep 2
 
 echo "════════════════════════════════════════════════════════════════════"
 echo ""
-echo "📝 Step 5: Text editor (shows remote filesystem)"
+echo "📊 Step 5: CPU Load Demo"
 echo ""
 sleep 2
 
-echo "ec2-user@x11-server:~$ gedit /home/ec2-user/welcome.txt &"
-gedit /home/ec2-user/welcome.txt &
-GEDIT_PID=\$!
-sleep 3
+echo "ec2-user@x11-server:~$ # Launch xterm and run cpu-load.sh"
+echo "ec2-user@x11-server:~$ # Open xterm, then: ./cpu-load.sh & top"
 echo ""
-echo "✅ gedit launched (PID: \$GEDIT_PID)"
-echo "   Text editor window appears on your local screen"
-echo "   File shown is from REMOTE EC2 instance"
-echo "   Try File → Open to see remote filesystem"
+echo "To test CPU monitoring:"
+echo "  1. Open xterm (already tested above)"
+echo "  2. Inside xterm: ./cpu-load.sh &"
+echo "  3. Inside xterm: top"
+echo "  4. Watch CPU jump to 100% on all cores"
 echo ""
-sleep 5
-
-echo "ec2-user@x11-server:~$ kill \$GEDIT_PID"
-kill \$GEDIT_PID 2>/dev/null || true
-sleep 2
-echo "✅ gedit window closed"
-echo ""
-sleep 2
-
-echo "════════════════════════════════════════════════════════════════════"
-echo ""
-echo "📊 Step 6: Advanced demo - System Monitor"
-echo ""
-sleep 2
-
-echo "ec2-user@x11-server:~$ # Launch gnome-system-monitor"
-echo "ec2-user@x11-server:~$ # (Not auto-launched in recording - try it yourself!)"
-echo ""
-echo "To test the full system monitor:"
-echo "  gnome-system-monitor"
-echo ""
-echo "This will show:"
-echo "  • CPU usage graphs"
-echo "  • Memory consumption"
+echo "This demonstrates:"
+echo "  • Real-time system monitoring via X11"
+echo "  • Interactive remote terminal"
+echo "  • Remote process management"
 echo "  • Process list"
 echo "  • Network activity"
 echo ""
@@ -300,9 +280,9 @@ echo "✅ Demo Complete!"
 echo ""
 echo "Summary:"
 echo "  • X11 forwarding: ✅ WORKING"
-echo "  • Simple apps (xeyes, xclock): ✅ TESTED"
-echo "  • Editor (gedit): ✅ TESTED (remote filesystem)"
-echo "  • Advanced apps (gnome-system-monitor): 📋 AVAILABLE"
+echo "  • Visual test (xeyes): ✅ TESTED"
+echo "  • X11 terminal (xterm): ✅ TESTED"
+echo "  • CPU load demo: 📋 AVAILABLE"
 echo ""
 echo "All GUI applications ran on EC2 but displayed locally!"
 echo ""
