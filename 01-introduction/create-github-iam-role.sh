@@ -210,8 +210,31 @@ if [ -z "$EXISTING_POLICY_ARN" ]; then
     rm /tmp/policy.json
     echo "✅ IAM policy created: $POLICY_ARN"
 else
-    echo "✅ IAM policy already exists: $EXISTING_POLICY_ARN"
+    echo "📜 Updating existing IAM policy..."
     POLICY_ARN=$EXISTING_POLICY_ARN
+    
+    # Delete old policy versions if at limit (AWS allows max 5 versions)
+    OLD_VERSIONS=$(aws iam list-policy-versions \
+        --policy-arn "$POLICY_ARN" \
+        --query 'Versions[?!IsDefaultVersion].VersionId' \
+        --output text)
+    
+    for VERSION in $OLD_VERSIONS; do
+        echo "   Deleting old policy version: $VERSION"
+        aws iam delete-policy-version \
+            --policy-arn "$POLICY_ARN" \
+            --version-id "$VERSION" 2>/dev/null || true
+    done
+    
+    # Create new policy version
+    echo "$POLICY_DOCUMENT" > /tmp/policy.json
+    aws iam create-policy-version \
+        --policy-arn "$POLICY_ARN" \
+        --policy-document file:///tmp/policy.json \
+        --set-as-default
+    
+    rm /tmp/policy.json
+    echo "✅ IAM policy updated with new permissions"
 fi
 
 # Attach policy to role
