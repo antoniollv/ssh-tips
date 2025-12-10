@@ -87,6 +87,28 @@ resource "aws_instance" "x11_server" {
               # Create a test file for demo
               echo "X11 Forwarding Demo Server" > /home/ec2-user/welcome.txt
               chown ec2-user:ec2-user /home/ec2-user/welcome.txt
+              
+              # Create CPU load generator script for demo
+              cat > /home/ec2-user/cpu-load.sh << 'SCRIPT'
+#!/bin/bash
+# CPU Load Generator for X11 Demo
+echo "Starting CPU load generation on all cores..."
+CORES=$(nproc)
+cpu_load() {
+    while true; do
+        echo "scale=5000; a(1)*4" | bc -l > /dev/null 2>&1
+    done
+}
+for i in $(seq 1 $CORES); do
+    cpu_load &
+done
+echo "CPU load started. Run 'top' in xterm to see the load."
+echo "To stop: killall cpu-load.sh"
+wait
+SCRIPT
+              
+              chmod +x /home/ec2-user/cpu-load.sh
+              chown ec2-user:ec2-user /home/ec2-user/cpu-load.sh
               EOF
 
   tags = {
