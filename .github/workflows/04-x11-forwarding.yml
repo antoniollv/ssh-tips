@@ -1,0 +1,189 @@
+name: Deploy Case 3 - X11 Forwarding Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'GitHub Environment to use'
+        required: true
+        default: 'poc'
+        type: choice
+        options:
+          - poc
+          - production
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
+      aws_region:
+        description: 'AWS Region'
+        required: true
+        default: 'eu-west-1'
+        type: choice
+        options:
+          - eu-west-1
+          - eu-central-1
+          - us-east-1
+          - us-west-2
+      ssh_public_key:
+        description: 'SSH public key for EC2 access (required)'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: ${{ inputs.aws_region }}
+  TF_VERSION: 1.6.0
+  WORKING_DIR: 04-x11-forwarding/terraform
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.action }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-X11Forwarding
+      
+      - name: Get configuration from AWS Secrets Manager
+        id: get-config
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id ssh-tips/github-actions-config \
+            --region ${{ env.AWS_REGION }} \
+            --query SecretString \
+            --output text)
+          
+          TF_BUCKET=$(echo $SECRET | jq -r '.TF_STATE_BUCKET')
+          ROLE_ARN=$(echo $SECRET | jq -r '.AWS_ROLE_ARN')
+          
+          echo "TF_STATE_BUCKET=$TF_BUCKET" >> $GITHUB_ENV
+          echo "AWS_ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+          
+          # Mask sensitive values
+          echo "::add-mask::$ROLE_ARN"
+          echo "✅ Configuration loaded from Secrets Manager"
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      
+      - name: Terraform Format
+        id: fmt
+        run: |
+          terraform fmt
+          terraform fmt -check
+        continue-on-error: true
+      
+      - name: Terraform Init
+        id: init
+        run: |
+          terraform init \
+            -backend-config="bucket=$TF_STATE_BUCKET" \
+            -backend-config="key=ssh-tips/04-x11-forwarding/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+      
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        id: plan
+        if: inputs.action == 'apply'
+        run: |
+          terraform plan -no-color -input=false \
+            -var="ssh_public_key=${{ inputs.ssh_public_key }}" \
+            -out=tfplan
+        continue-on-error: true
+      
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+      
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve -input=false tfplan
+      
+      - name: Wait for user_data completion
+        if: inputs.action == 'apply'
+        run: |
+          echo "Waiting for EC2 user_data to complete (X11 packages installation)..."
+          sleep 30
+      
+      - name: Verify X11 configuration
+        if: inputs.action == 'apply'
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Verifying X11 forwarding configuration on EC2 instance"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          # Get the EC2 public IP from Terraform output
+          X11_SERVER_IP=$(terraform output -raw x11_server_public_ip)
+          
+          echo "📡 EC2 Public IP: $X11_SERVER_IP"
+          echo ""
+          echo "⏳ Waiting for SSH to be ready..."
+          sleep 5
+          
+          echo "✅ X11 server is ready for connections"
+          echo ""
+      
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        run: |
+          terraform destroy -auto-approve -input=false \
+            -var="ssh_public_key=${{ inputs.ssh_public_key }}"
+      
+      - name: Summary
+        if: inputs.action == 'apply'
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🎉 Case 3: X11 Forwarding - Deployment Complete"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          # Display connection instructions
+          terraform output -raw demo_commands
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🪟 Windows Users"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          terraform output -raw windows_instructions
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 Quick Reference"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "SSH Connection Command:"
+          terraform output -raw ssh_connection_command
+          echo ""
+          echo ""
+          echo "Demo Commands (run after connecting):"
+          echo "  • xeyes              # Simple test"
+          echo "  • xclock             # Clock application"
+          echo "  • gnome-system-monitor  # System monitor"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
