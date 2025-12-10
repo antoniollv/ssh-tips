@@ -154,36 +154,67 @@ jobs:
           terraform destroy -auto-approve -input=false \
             -var="ssh_public_key=${{ inputs.ssh_public_key }}"
       
-      - name: Summary
+      - name: Get Outputs
+        if: inputs.action == 'apply'
+        id: outputs
+        run: |
+          echo "x11_server_ip=$(terraform output -raw x11_server_public_ip)" >> $GITHUB_OUTPUT
+          echo "ssh_command=$(terraform output -raw ssh_connection_command)" >> $GITHUB_OUTPUT
+      
+      - name: Display Connection Info
         if: inputs.action == 'apply'
         run: |
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "🎉 Case 3: X11 Forwarding - Deployment Complete"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo ""
-          
-          # Display connection instructions
-          terraform output -raw demo_commands
-          
-          echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "🪟 Windows Users"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
-          terraform output -raw windows_instructions
-          
-          echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 Quick Reference"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo ""
-          echo "SSH Connection Command:"
-          terraform output -raw ssh_connection_command
-          echo ""
-          echo ""
-          echo "Demo Commands (run after connecting):"
-          echo "  • xeyes              # Simple test"
-          echo "  • xclock             # Clock application"
-          echo "  • gnome-system-monitor  # System monitor"
-          echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "### 🚀 Infrastructure Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**X11 Server Public IP:** ${{ steps.outputs.outputs.x11_server_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 🔐 SSH Connection with X11 Forwarding:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.outputs.outputs.ssh_command }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 🎨 Test X11 Applications:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "# Simple test (eyes that follow your cursor)" >> $GITHUB_STEP_SUMMARY
+          echo "xeyes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Clock application" >> $GITHUB_STEP_SUMMARY
+          echo "xclock" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Text editor (shows REMOTE filesystem)" >> $GITHUB_STEP_SUMMARY
+          echo "gedit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# System monitor (advanced demo)" >> $GITHUB_STEP_SUMMARY
+          echo "gnome-system-monitor" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 💻 Prerequisites (Local Machine):" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Linux:**" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ X11 already installed (no action needed)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Windows:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Install VcXsrv: https://sourceforge.net/projects/vcxsrv/" >> $GITHUB_STEP_SUMMARY
+          echo "2. Launch XLaunch with default settings" >> $GITHUB_STEP_SUMMARY
+          echo "3. Set DISPLAY variable:" >> $GITHUB_STEP_SUMMARY
+          echo '```powershell' >> $GITHUB_STEP_SUMMARY
+          echo '$env:DISPLAY="localhost:0.0"' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**macOS:**" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "brew install --cask xquartz" >> $GITHUB_STEP_SUMMARY
+          echo "# Log out and log back in" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### ✅ Expected Result:" >> $GITHUB_STEP_SUMMARY
+          echo "- GUI windows appear on your **LOCAL** screen" >> $GITHUB_STEP_SUMMARY
+          echo "- Applications run on **REMOTE** EC2 instance" >> $GITHUB_STEP_SUMMARY
+          echo "- gedit shows remote filesystem (not local files)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 🔑 Quick Reference:" >> $GITHUB_STEP_SUMMARY
+          echo "**EC2 IP:** ${{ steps.outputs.outputs.x11_server_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "**SSH User:** ec2-user" >> $GITHUB_STEP_SUMMARY
+          echo "**X11 Forwarding:** Enabled (-X flag)" >> $GITHUB_STEP_SUMMARY
