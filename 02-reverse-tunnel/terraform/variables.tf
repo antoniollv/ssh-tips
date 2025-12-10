@@ -11,9 +11,8 @@ variable "instance_type" {
 }
 
 variable "ssh_public_key" {
-  description = "SSH public key for EC2 access"
+  description = "SSH public key for EC2 access (required)"
   type        = string
-  default     = ""
 }
 
 variable "allowed_ssh_cidr" {

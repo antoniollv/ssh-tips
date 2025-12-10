@@ -8,12 +8,6 @@ output "bastion_public_ip" {
   value       = aws_eip.bastion.public_ip
 }
 
-output "temp_private_key" {
-  description = "Temporary SSH private key (only if ssh_public_key not provided)"
-  value       = var.ssh_public_key == "" ? tls_private_key.bastion_key[0].private_key_pem : "Using provided SSH key"
-  sensitive   = true
-}
-
 output "instructions" {
   description = "Instructions to retrieve credentials and connect"
   value = <<-EOT

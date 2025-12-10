@@ -14,16 +14,9 @@ data "aws_ami" "amazon_linux_2023" {
   }
 }
 
-# Generate SSH key pair if not provided
-resource "tls_private_key" "bastion_key" {
-  count     = var.ssh_public_key == "" ? 1 : 0
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
 resource "aws_key_pair" "bastion" {
   key_name   = "ssh-tips-bastion-key"
-  public_key = var.ssh_public_key != "" ? var.ssh_public_key : tls_private_key.bastion_key[0].public_key_openssh
+  public_key = var.ssh_public_key
 
   tags = {
     Name = "ssh-tips-bastion-key"

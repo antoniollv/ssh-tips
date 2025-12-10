@@ -59,15 +59,13 @@ variable "db_username" {
 }
 
 variable "ssh_public_key" {
-  description = "SSH public key for EC2 access (optional, will generate if not provided)"
+  description = "SSH public key for EC2 access (required)"
   type        = string
-  default     = ""
 }
 
 variable "ssh_private_key" {
   description = "SSH private key for connecting to bastion (required for DB population)"
   type        = string
-  default     = ""
   sensitive   = true
 }
 

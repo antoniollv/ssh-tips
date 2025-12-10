@@ -30,8 +30,8 @@ on:
           - us-east-1
           - us-west-2
       ssh_public_key:
-        description: 'SSH public key for EC2 access (optional, uses default if empty)'
-        required: false
+        description: 'SSH public key for EC2 access (required)'
+        required: true
         type: string
 
 env:
@@ -110,7 +110,7 @@ jobs:
         if: inputs.action == 'apply'
         run: |
           terraform plan -no-color -input=false \
-            -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}" \
+            -var="ssh_public_key=${{ inputs.ssh_public_key }}" \
             -out=tfplan
         continue-on-error: true
       
@@ -126,7 +126,7 @@ jobs:
         if: inputs.action == 'destroy'
         run: |
           terraform destroy -auto-approve -input=false \
-            -var="ssh_public_key=${{ inputs.ssh_public_key || secrets.SSH_PUBLIC_KEY }}"
+            -var="ssh_public_key=${{ inputs.ssh_public_key }}"
       
       - name: Get Outputs
         if: inputs.action == 'apply'

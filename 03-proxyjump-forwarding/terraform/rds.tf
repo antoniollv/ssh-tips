@@ -89,7 +89,7 @@ resource "null_resource" "populate_db" {
     connection {
       type        = "ssh"
       user        = "ec2-user"
-      private_key = var.ssh_private_key != "" ? var.ssh_private_key : tls_private_key.bastion_key[0].private_key_pem
+      private_key = var.ssh_private_key
       host        = aws_eip.bastion.public_ip
     }
 
