@@ -108,10 +108,11 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: inputs.action == 'apply'
+        env:
+          TF_VAR_ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           terraform plan -no-color -input=false \
             -var="ssh_public_key=${{ inputs.ssh_public_key }}" \
-            -var="ssh_private_key=${{ secrets.SSH_PRIVATE_KEY }}" \
             -out=tfplan
         continue-on-error: true
       
@@ -121,6 +122,8 @@ jobs:
       
       - name: Terraform Apply
         if: inputs.action == 'apply'
+        env:
+          TF_VAR_ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
         run: terraform apply -auto-approve -input=false tfplan
       
       - name: Delete Secrets Manager Secret (before destroy)
@@ -138,10 +141,11 @@ jobs:
       
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
+        env:
+          TF_VAR_ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           terraform destroy -auto-approve -input=false \
-            -var="ssh_public_key=${{ inputs.ssh_public_key }}" \
-            -var="ssh_private_key=${{ secrets.SSH_PRIVATE_KEY }}"
+            -var="ssh_public_key=${{ inputs.ssh_public_key }}"
       
       - name: Get Outputs
         if: inputs.action == 'apply'
