@@ -9,9 +9,14 @@ terraform {
   }
 
   backend "s3" {
-    key            = "ssh-tips/case03-x11-forwarding/terraform.tfstate"
-    encrypt        = true
-    dynamodb_table = "terraform-state-lock"
+    # Backend configuration will be provided via:
+    # - GitHub Actions workflow (CI/CD)
+    # - terraform init -backend-config (local development)
+    # 
+    # Required backend config:
+    # bucket = "your-terraform-state-bucket"
+    # key    = "ssh-tips/04-x11-forwarding/terraform.tfstate"
+    # region = "eu-west-1"
   }
 }
 
