@@ -111,7 +111,7 @@ These are not exotic tricks. They're practical tools for:
 
 Let's begin with the first case: **The Server That Doesn't Exist**
 
-👉 **[Continue to Case 1: Reverse SSH Tunnel](../02-reverse-tunnel/)**
+👉 **[Continue to Case 1: Reverse SSH Tunnel](../02-reverse-tunnel/README.md)**
 
 ---
 

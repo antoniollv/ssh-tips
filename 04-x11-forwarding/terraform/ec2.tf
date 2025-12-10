@@ -61,55 +61,46 @@ resource "aws_instance" "x11_server" {
 
   vpc_security_group_ids = [aws_security_group.x11_server.id]
 
-  user_data = <<-EOF
-              #!/bin/bash
-              # Update system
-              yum update -y
-              
-              # Install X11 authentication utilities
-              yum install -y xorg-x11-xauth
-              
-              # Install lightweight X11 demo applications
-              yum install -y xeyes xterm
-              
-              # Configure SSH for X11 forwarding
-              sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
-              sed -i 's/#X11DisplayOffset 10/X11DisplayOffset 10/' /etc/ssh/sshd_config
-              sed -i 's/#X11UseLocalhost yes/X11UseLocalhost yes/' /etc/ssh/sshd_config
-              
-              # Enable TCP keepalive for SSH
-              echo "ClientAliveInterval 60" >> /etc/ssh/sshd_config
-              echo "ClientAliveCountMax 3" >> /etc/ssh/sshd_config
-              
-              # Restart SSH service
-              systemctl restart sshd
-              
-              # Create a test file for demo
-              echo "X11 Forwarding Demo Server" > /home/ec2-user/welcome.txt
-              chown ec2-user:ec2-user /home/ec2-user/welcome.txt
-              
-              # Create CPU load generator script for demo
-              cat > /home/ec2-user/cpu-load.sh << 'SCRIPT'
+  user_data = <<EOF
 #!/bin/bash
-# CPU Load Generator for X11 Demo
+# Update system
+dnf update -y
+
+# Install X11 authentication utilities
+dnf install -y xorg-x11-xauth xeyes xterm
+
+# Install stress tool for CPU load testing
+dnf install -y stress
+
+# Configure SSH for X11 forwarding
+sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
+sed -i 's/#X11DisplayOffset 10/X11DisplayOffset 10/' /etc/ssh/sshd_config
+sed -i 's/#X11UseLocalhost yes/X11UseLocalhost yes/' /etc/ssh/sshd_config
+
+# Enable TCP keepalive for SSH
+echo "ClientAliveInterval 60" >> /etc/ssh/sshd_config
+echo "ClientAliveCountMax 3" >> /etc/ssh/sshd_config
+
+# Restart SSH service
+systemctl restart sshd
+
+# Create a test file for demo
+echo "X11 Forwarding Demo Server" > /home/ec2-user/welcome.txt
+chown ec2-user:ec2-user /home/ec2-user/welcome.txt
+
+# Create CPU load generator script for demo
+cat > /home/ec2-user/cpu-load.sh << 'SCRIPT'
+#!/bin/bash
+# CPU Load Generator for X11 Demo using stress
 echo "Starting CPU load generation on all cores..."
-CORES=$(nproc)
-cpu_load() {
-    while true; do
-        echo "scale=5000; a(1)*4" | bc -l > /dev/null 2>&1
-    done
-}
-for i in $(seq 1 $CORES); do
-    cpu_load &
-done
-echo "CPU load started. Run 'top' in xterm to see the load."
-echo "To stop: killall cpu-load.sh"
-wait
+echo "Generating 100% CPU load for 60 seconds..."
+stress --cpu 1 --timeout 60s
+echo "CPU load finished. You can run this script again if needed."
 SCRIPT
-              
-              chmod +x /home/ec2-user/cpu-load.sh
-              chown ec2-user:ec2-user /home/ec2-user/cpu-load.sh
-              EOF
+
+chmod +x /home/ec2-user/cpu-load.sh
+chown ec2-user:ec2-user /home/ec2-user/cpu-load.sh
+EOF
 
   tags = {
     Name = "ssh-tips-x11-server"
