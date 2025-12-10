@@ -16,6 +16,7 @@ Web server accessible from the internet that is physically on your local machine
 ## 🏗️ Architecture
 
 **Port Configuration:**
+
 - **Local Machine Port:** 8085 (where crazy-bat web server runs)
 - **EC2 Public Port:** 8080 (exposed to the internet)
 - **SSH Tunnel Mapping:** EC2:8080 → localhost:8085
